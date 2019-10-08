@@ -1,3 +1,2 @@
-# PLOG
-## Squex
+# PLOG - Squex
 
