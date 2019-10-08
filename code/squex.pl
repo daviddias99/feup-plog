@@ -25,15 +25,16 @@ display_board([], [SquareLine | Squares]) :-
     display_board([], Squares).
 display_board([OctagonLine | Octagons], [SquareLine | Squares]) :-
     display_square_line(SquareLine), nl,
-    display_upper_octagon_line, nl,
-    display_full_octagon_line(OctagonLine), nl,
-    display_lower_octagon_line, nl,
+    display_full_octagon(OctagonLine), nl,
     display_board(Octagons, Squares).
 
-display_upper_octagon_line :- write(' /   \\ /   \\ /   \\ /   \\ /   \\ /   \\ /   \\ /   \\ ').
-display_lower_octagon_line :- write(' \\   / \\   / \\   / \\   / \\   / \\   / \\   / \\   /').
+display_upper_octagon :- write(' /   \\ /   \\ /   \\ /   \\ /   \\ /   \\ /   \\ /   \\ ').
+display_lower_octagon :- write(' \\   / \\   / \\   / \\   / \\   / \\   / \\   / \\   /').
 
-display_full_octagon_line(OctagonLine) :- write('|  '), display_octagon_line(OctagonLine).
+display_full_octagon(OctagonLine) :-
+    display_upper_octagon, nl,
+    write('|  '), display_octagon_line(OctagonLine), nl,
+    display_lower_octagon.
 
 display_octagon_line([]).
 display_octagon_line([H | T]) :- write(H), write('  |  '), display_octagon_line(T). 
