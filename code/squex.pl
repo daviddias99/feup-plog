@@ -25,26 +25,25 @@ init_board([[
 display_board([OctagonBoard, SquareBoard |[]]) :- display_board(OctagonBoard, SquareBoard).
 
 display_board([],[]).
-display_board([], [SquareLine | Squares]) :- 
-    display_square_line(SquareLine), 
-    display_board([], Squares).
-display_board([OctagonLine | Octagons], [SquareLine | Squares]) :-
-    display_square_line(SquareLine), nl,
-    display_full_octagon(OctagonLine), nl,
-    display_board(Octagons, Squares).
+display_board([], [SquareLine | SquareBoard]) :- 
+    display_full_square(SquareLine), 
+    display_board([], SquareBoard).
+display_board([OctagonLine | OctagonBoard], [SquareLine | SquareBoard]) :-
+    display_full_square(SquareLine), nl,
+    write('|   '), display_octagon_line(OctagonLine), nl,
+    display_board(OctagonBoard, SquareBoard).
 
-display_upper_octagon :- write(' /   \\ /   \\ /   \\ /   \\ /   \\ /   \\ /   \\ /   \\ ').
-display_lower_octagon :- write(' \\   / \\   / \\   / \\   / \\   / \\   / \\   / \\   /').
+display_full_square(SquareLine) :-
+    display_lower_octagon, nl,
+    write(' '), display_square_line(SquareLine), nl,
+    display_upper_octagon.
 
-display_full_octagon(OctagonLine) :-
-    display_upper_octagon, nl,
-    write('|  '), display_octagon_line(OctagonLine), nl,
-    display_lower_octagon.
+display_square_line([]).
+display_square_line([H | []]) :- write(H).
+display_square_line([H | T]) :- write(H), write(' --- '), display_square_line(T).
+
+display_upper_octagon :- write('\\ /   \\ /   \\ /   \\ /   \\ /   \\ /   \\ /   \\ /   \\ /').
+display_lower_octagon :- write('/ \\   / \\   / \\   / \\   / \\   / \\   / \\   / \\   / \\').
 
 display_octagon_line([]).
 display_octagon_line([H | T]) :- write(H), write('  |  '), display_octagon_line(T). 
-
-display_square_line([]).
-display_square_line([H | T]) :- write(H), write(' --- '), display_square_line(T).
-
-
