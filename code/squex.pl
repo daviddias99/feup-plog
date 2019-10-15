@@ -31,9 +31,9 @@ display_horizontal_coordinates(X, 1) :- write('   '), write(X), nl.
 
 display_horizontal_coordinates(a, Num) :-
     Num > 1, 
-    write('        '), 
+    write('         '), 
     write(a), 
-    write('  '),  
+    write('    '),  
     char_code(a, Code),
     NewCode is Code + 1,
     NewNum is Num - 1,
@@ -44,7 +44,7 @@ display_horizontal_coordinates(Char, Num) :-
     Num > 1,
     write('   '), 
     write(Char), 
-    write('  '), 
+    write('    '), 
     char_code(Char, Code),
     NewCode is Code + 1,
     NewNum is Num - 1,
@@ -61,7 +61,7 @@ display_board([], [SquareLine | SquareBoard], Y) :-
 
 display_board([OctagonLine | OctagonBoard], [SquareLine | SquareBoard], Y) :-
     display_full_square(SquareLine, Y), nl,
-    write(Y), write('    |  '), display_octagon_line(OctagonLine), nl,
+    write(Y), write('    |   '), display_octagon_line(OctagonLine), nl,
     YNext is Y + 1,
     display_board(OctagonBoard, SquareBoard, YNext).
 
@@ -72,15 +72,15 @@ display_full_square(SquareLine, Y) :-
   
 display_square_line([]).
 display_square_line([H | []]) :- write(H).
-display_square_line([H | T]) :- write(H), write(' --- '), display_square_line(T).
+display_square_line([H | T]) :- write(H), write(' ----- '), display_square_line(T).
 
 
-display_upper_octagon(0) :- write('  /   \\ /   \\ /   \\ /   \\ /   \\ /   \\ /   \\ /   \\ ').
-display_upper_octagon(8) :- write('      \\ /   \\ /   \\ /   \\ /   \\ /   \\ /   \\ / ').
-display_upper_octagon(_) :- write('\\ /   \\ /   \\ /   \\ /   \\ /   \\ /   \\ /   \\ /   \\ /').
-display_lower_octagon(0) :- write('      / \\   / \\   / \\   / \\   / \\   / \\   / \\').
-display_lower_octagon(8) :- write('  \\   / \\   / \\   / \\   / \\   / \\   / \\   / \\   / ').
-display_lower_octagon(_) :- write('/ \\   / \\   / \\   / \\   / \\   / \\   / \\   / \\   / \\').
+display_upper_octagon(0) :- write('  /     \\ /     \\ /     \\ /     \\ /     \\ /     \\ /     \\ /     \\ ').
+display_upper_octagon(8) :- write('        \\ /     \\ /     \\ /     \\ /     \\ /     \\ /     \\ / ').
+display_upper_octagon(_) :- write('\\ /     \\ /     \\ /     \\ /     \\ /     \\ /     \\ /     \\ /     \\ /').
+display_lower_octagon(0) :- write('        / \\     / \\     / \\     / \\     / \\     / \\     / \\').
+display_lower_octagon(8) :- write('  \\     / \\     / \\     / \\     / \\     / \\     / \\     / \\     / ').
+display_lower_octagon(_) :- write('/ \\     / \\     / \\     / \\     / \\     / \\     / \\     / \\     / \\').
 
 display_octagon_line([]).
-display_octagon_line([H | T]) :- write(H), write('  |  '), display_octagon_line(T). 
+display_octagon_line([H | T]) :- write(H), write('   |   '), display_octagon_line(T). 
