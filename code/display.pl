@@ -1,8 +1,12 @@
 % display board
 
-display_board([OctagonBoard, SquareBoard |[]]) :-
+display_game([OctagonBoard, SquareBoard |[]], Player) :-
     display_horizontal_coordinates(a, 8), nl, 
-    display_board(OctagonBoard, SquareBoard, 0).
+    display_board(OctagonBoard, SquareBoard, 0), nl, nl,
+    write("Player "), write_player(Player), write("'s turn").
+
+write_player(1) :- ansi_format([bold, fg(blue)], 1, [world]).
+write_player(2) :- ansi_format([bold, fg(red)], 2, [world]).
 
 display_board([], [], _).
 display_board([], [SquareRow | SquareBoard], Y) :- 

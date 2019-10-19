@@ -1,6 +1,6 @@
 :- [display].
 
-start() :- init_board(Board), display_board(Board).
+start(Player) :- init_board(Board), display_game(Board, Player).
 
 init_board([[
              [0, 0, 0, 0, 0, 0, 0, 0],
