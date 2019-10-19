@@ -3,7 +3,7 @@
 display_game([OctagonBoard, SquareBoard |[]], Player) :-
     display_horizontal_coordinates(a, 8), nl, 
     display_board(OctagonBoard, SquareBoard, 0), nl, nl,
-    write("Player "), write_player(Player), write("'s turn").
+    write("Player "), write_player(Player), write(" s turn").
 
 write_player(1) :- ansi_format([bold, fg(blue)], 1, [world]).
 write_player(2) :- ansi_format([bold, fg(red)], 2, [world]).
@@ -16,7 +16,7 @@ display_board([], [SquareRow | SquareBoard], Y) :-
 display_board([OctagonRow | OctagonBoard], [SquareRow | SquareBoard], Y) :-
     display_square_row_borders(SquareRow, Y), nl,
     ansi_format(bold, Y, [world]), write(' '),  
-    display_octagon_hor_separator, 
+    display_octagon_hor_separator(), 
     display_octagon_row(OctagonRow), nl,
     YNext is Y + 1,
     display_board(OctagonBoard, SquareBoard, YNext).
@@ -36,7 +36,7 @@ display_octagon_piece(_) :- ansi_format([], ' ', [world]).
 % display rows
 
 display_octagon_row([]).
-display_octagon_row([H | T]) :- display_octagon_piece(H), display_octagon_hor_separator, display_octagon_row(T). 
+display_octagon_row([H | T]) :- display_octagon_piece(H), display_octagon_hor_separator(), display_octagon_row(T). 
 
 display_square_row_borders(SquareRow, Y) :-
     write('    '), display_lower_octagon_cell(Y), nl,
@@ -45,7 +45,7 @@ display_square_row_borders(SquareRow, Y) :-
 
 display_square_row([]).
 display_square_row([H | []]) :- display_square_piece(H).
-display_square_row([H | T]) :- display_square_piece(H), display_octagon_ver_separator, display_square_row(T).
+display_square_row([H | T]) :- display_square_piece(H), display_octagon_ver_separator(), display_square_row(T).
 
 
 % auxiliary functions to display borders of the cells
@@ -58,8 +58,8 @@ display_lower_octagon_cell(0) :- ansi_format(bold, '        \u2571 \u2572     \u
 display_lower_octagon_cell(8) :- ansi_format(bold, '  \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 ', [world]).
 display_lower_octagon_cell(_) :- ansi_format(bold, '\u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572', [world]).
 
-display_octagon_ver_separator :- write('  \u2501\u2501\u2501  ').
-display_octagon_hor_separator :- write('   \u2503   ').
+display_octagon_ver_separator() :- write('  \u2501\u2501\u2501  ').
+display_octagon_hor_separator() :- write('   \u2503   ').
 
 
 % display coordinates
