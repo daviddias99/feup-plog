@@ -9,8 +9,9 @@ get_input_ver_coord(Coord) :- repeat, get_input('Vertical coordinate', Input), c
 
 char_to_ver_coord(Coord, Int) :- char_code(Coord, Code), digit_to_int(Code, Int), Int >= 0, Int =< 7.
 
-digit_to_int(Digit, Int) :- Int is Digit - 48.
-letter_to_int(Letter, Int) :- Int is Letter - 97. 
+digit_to_int(Code, Int) :- Int is Code - 48.
+letter_to_int(Code, Int) :- Code >= 97, Code =< 122, !, Int is Code - 97. 
+letter_to_int(Code, Int) :- Int is Code - 65.
 
 get_input_hor_coord(Coord) :- repeat, get_input('Horizontal coordinate', Input), char_to_hor_coord(Input, Coord).
 
