@@ -1,4 +1,4 @@
-:- [display].
+:- [display], [input].
 
 start(Player) :- init_board(Board), display_game(Board, Player).
 
