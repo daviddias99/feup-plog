@@ -23,11 +23,11 @@ init_board([[
             ]]
 ).
 
-test(G):- init_board(Board),teste(Board,G).
+test(G,L):- init_board(Board),teste(Board,G,L).
 
+testing(G):- vertices_edges_to_ugraph([],[1-3,1-2,2-1],G).
 
-
-teste([H1,H2|_],G) :- build_edges(H1,H2,GraphEdges,1), vertices_edges_to_ugraph([],GraphEdges,G).
+teste([H1,H2|_],G,L) :- build_edges(H1,H2,GraphEdges,1), vertices_edges_to_ugraph([],GraphEdges,G),reachable(3,G,L).
 
 
 % get the graphs edges
@@ -59,11 +59,11 @@ add_paths_from_row_iter(CurrentOctRow,NextOctRow,NextSqRow,GraphEdges,Color,Edge
         Cell =:= Color,
         NewXCoord is XCoord +1,
 
-        get_child_from_belowL(Color,NextSqRow,EdgeA,XCoord,YCoord),
+        get_child_from_belowL(Color,NextOctRow,NextSqRow,EdgeA,XCoord,YCoord),
         get_child_from_belowC(Color,NextOctRow,EdgeB,XCoord,YCoord),
-        get_child_from_belowR(Color,NextSqRow,EdgeC,XCoord,YCoord),
-        get_child_from_levelL(Color,NextOctRow,EdgeD,XCoord,YCoord),
-        get_child_from_levelR(Color,NextOctRow,EdgeE,XCoord,YCoord),
+        get_child_from_belowR(Color,NextOctRow,NextSqRow,EdgeC,XCoord,YCoord),
+        get_child_from_levelL(Color,CurrentOctRow,EdgeD,XCoord,YCoord),
+        get_child_from_levelR(Color,CurrentOctRow,EdgeE,XCoord,YCoord),
 
         append(Edges,EdgeA,Edges1),
         append(Edges1,EdgeB,Edges2),
@@ -105,20 +105,6 @@ get_child_from_levelR(Color,CurrentOctRow,Edge,XCoord,_) :-
         Val =\= Color,
         Edge = [].
 
-get_child_from_belowL(_,_,[],0,_).
-
-get_child_from_belowL(Color,NextSqRow,Edge,XCoord,YCoord) :-
-        nth0(XCoord,NextSqRow,Val),
-        Val =:= Color,
-        AdjCoord is 8 * (YCoord + 1) + (XCoord - 1),
-        CurrCoord is 8 * YCoord + XCoord,
-        Edge = [CurrCoord-AdjCoord].
-
-get_child_from_belowL(Color,NextSqRow,Edge,XCoord,_) :-
-        nth0(XCoord,NextSqRow,Val),
-        Val =\= Color,
-        Edge = [].
-
 get_child_from_belowC(Color,NextOctRow,Edge,XCoord,YCoord) :-
         nth0(XCoord,NextOctRow,Val),
         Val =:= Color,
@@ -131,17 +117,56 @@ get_child_from_belowC(Color,NextOctRow,Edge,XCoord,_) :-
         Val =\= Color,
         Edge = [].
 
-get_child_from_belowR(_,_,[],7,_).
 
-get_child_from_belowR(Color,NextSqRow,Edge,XCoord,YCoord) :-
+get_child_from_belowL(_,_,_,[],0,_).
+
+get_child_from_belowL(Color,NextOctRow,NextSqRow,Edge,XCoord,YCoord) :-
+        nth0(XCoord,NextSqRow,SqVal),
+        SqVal =:= Color,
+        AdjXCoord is XCoord - 1,
+        nth0(AdjXCoord,NextOctRow,OctVal),
+        OctVal =:= Color,
+        AdjCoord is 8 * (YCoord + 1) + (XCoord - 1),
+        CurrCoord is 8 * YCoord + XCoord,
+        Edge = [CurrCoord-AdjCoord].
+
+get_child_from_belowL(Color,NextOctRow,NextSqRow,Edge,XCoord,_) :-
+        nth0(XCoord,NextSqRow,SqVal),
+        SqVal =:= Color,
+        AdjXCoord is XCoord - 1,
+        nth0(AdjXCoord,NextOctRow,OctVal),
+        OctVal =\= Color,
+        Edge = [].
+
+get_child_from_belowL(Color,_,NextSqRow,Edge,XCoord,_) :-
+        nth0(XCoord,NextSqRow,Val),
+        Val =\= Color,
+        Edge = [].
+
+get_child_from_belowR(_,_,_,[],7,_).
+
+get_child_from_belowR(Color,NextOctRow,NextSqRow,Edge,XCoord,YCoord) :-
         NewXCoord is XCoord +1,
-        nth0(NewXCoord,NextSqRow,Val),
-        Val =:= Color,
+        nth0(NewXCoord,NextSqRow,SqVal),
+        SqVal =:= Color,
+        AdjXCoord is XCoord + 1,
+        nth0(AdjXCoord,NextOctRow,OctVal),
+        OctVal =:= Color,
         AdjCoord is 8 * (YCoord + 1) + (XCoord + 1),
         CurrCoord is 8 * YCoord + XCoord,
         Edge = [CurrCoord-AdjCoord].
 
-get_child_from_belowR(Color,NextSqRow,Edge,XCoord,_) :-
+get_child_from_belowR(Color,NextOctRow,NextSqRow,Edge,XCoord,_) :-
+        NewXCoord is XCoord +1,
+        nth0(NewXCoord,NextSqRow,SqVal),
+        SqVal =:= Color,
+        AdjXCoord is XCoord + 1,
+        nth0(AdjXCoord,NextOctRow,OctVal),
+        OctVal =\= Color,
+        Edge = [].
+        
+
+get_child_from_belowR(Color,_,NextSqRow,Edge,XCoord,_) :-
         NewXCoord is XCoord +1,
         nth0(NewXCoord,NextSqRow,Val),
         Val =\= Color,
