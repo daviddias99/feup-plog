@@ -29,11 +29,13 @@ testing(G):- vertices_edges_to_ugraph([],[1-3,1-2,2-1],G).
 
 teste([H1,H2|_],G,L) :- build_edges(H1,H2,GraphEdges,1), vertices_edges_to_ugraph([],GraphEdges,G),reachable(3,G,L).
 
+build_graph(OctagonBoard,SquareBoard,G,Player) :- build_edges(H1,H2,GraphEdges,Player),vertices_edges_to_ugraph
 
 % get the graphs edges
 
 build_edges(OctagonBoard,[_|RemainingSquareBoard],GraphEdges,Color) :-
-        build_edges_iter(OctagonBoard,RemainingSquareBoard,GraphEdges,[],Color,0).
+        build_edges_iter(OctagonBoard,RemainingSquareBoard,GraphEdges1,[],Color,0),
+        make_undirected(GraphEdges1,GraphEdges).
 
 build_edges_iter([_|[]],_,GraphEdges,GraphEdges,_,_).
 
@@ -172,7 +174,14 @@ get_child_from_belowR(Color,_,NextSqRow,Edge,XCoord,_) :-
         Val =\= Color,
         Edge = [].
 
-              
+make_undirected(Graph1,Graph2) :- make_undirected_iter(Graph1,Graph2,[]).
+
+make_undirected_iter([],Graph,Graph).
+make_undirected_iter([A-B|T],Graph,Acc) :- 
+        append(Acc,[A-B],Acc1),
+        append(Acc1,[B-A],Acc2),
+        make_undirected_iter(T,Graph,Acc2).
+
 
 % get in Starters a list with the indexes of the valid starting points
 get_valid_starters([H|_],Color,Starters) :- member(Color,H), fecthStarters(H,Color,Starters).
