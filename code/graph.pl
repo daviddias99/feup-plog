@@ -1,3 +1,5 @@
+:- use_module(library(ugraphs)).
+
 init_board([[
              [0, 0, 0, 1, 2, 2, 2, 2],
              [0, 0, 0, 1, 1, 1, 1, 1],
@@ -21,37 +23,37 @@ init_board([[
             ]]
 ).
 
-test():- init_board(Board),teste(Board).
+test(G):- init_board(Board),teste(Board,G).
 
 
 
-teste([H1,H2|_]) :- build_graph(H1,H2,Graph,1),print_arr(Graph).
+teste([H1,H2|_],G) :- build_edges(H1,H2,GraphEdges,1), vertices_edges_to_ugraph([],GraphEdges,G).
 
 
-% add paths to graph
+% get the graphs edges
 
-build_graph(OctagonBoard,SquareBoard,Graph,Color) :-
-        build_graph_iter(OctagonBoard,SquareBoard,Graph,[],Color,0).
+build_edges(OctagonBoard,[_|RemainingSquareBoard],GraphEdges,Color) :-
+        build_edges_iter(OctagonBoard,RemainingSquareBoard,GraphEdges,[],Color,0).
 
-build_graph_iter([_|[]],_,Graph,Graph,_,_).
+build_edges_iter([_|[]],_,GraphEdges,GraphEdges,_,_).
 
-build_graph_iter([CurrentOctRow,NextOctRow|RemainingOctagonBoard],[NextSqRow|RemainingSquareBoard],Graph,Edges,Color,OctRowY):-
+build_edges_iter([CurrentOctRow,NextOctRow|RemainingOctagonBoard],[NextSqRow|RemainingSquareBoard],GraphEdges,Edges,Color,OctRowY):-
         add_paths_from_row(CurrentOctRow,NextOctRow,NextSqRow,NewEdges,Color,OctRowY),
         append(Edges,NewEdges,NextEdges),
         NewOctRowY is OctRowY + 1,
-        build_graph_iter([NextOctRow|RemainingOctagonBoard],RemainingSquareBoard,Graph,NextEdges,Color,NewOctRowY).
+        build_edges_iter([NextOctRow|RemainingOctagonBoard],RemainingSquareBoard,GraphEdges,NextEdges,Color,NewOctRowY).
 
-add_paths_from_row(CurrentOctRow,NextOctRow,NextSqRow,Graph,Color,OctRowY) :- add_paths_from_row_iter(CurrentOctRow,NextOctRow,NextSqRow,Graph,Color,[],1,OctRowY).
+add_paths_from_row(CurrentOctRow,NextOctRow,NextSqRow,GraphEdges,Color,OctRowY) :- add_paths_from_row_iter(CurrentOctRow,NextOctRow,NextSqRow,GraphEdges,Color,[],0,OctRowY).
 
-add_paths_from_row_iter(_,_,_,Graph,_,Graph,7,_).
+add_paths_from_row_iter(_,_,_,GraphEdges,_,GraphEdges,8,_).
 
-add_paths_from_row_iter(CurrentOctRow,NextOctRow,NextSqRow,Graph,Color,Edges,XCoord,YCoord) :- 
+add_paths_from_row_iter(CurrentOctRow,NextOctRow,NextSqRow,GraphEdges,Color,Edges,XCoord,YCoord) :- 
         nth0(XCoord,CurrentOctRow,Cell),
         Cell =\= Color,
         NewXCoord is XCoord +1,
-        add_paths_from_row_iter(CurrentOctRow,NextOctRow,NextSqRow,Graph,Color,Edges,NewXCoord,YCoord).   
+        add_paths_from_row_iter(CurrentOctRow,NextOctRow,NextSqRow,GraphEdges,Color,Edges,NewXCoord,YCoord).   
 
-add_paths_from_row_iter(CurrentOctRow,NextOctRow,NextSqRow,Graph,Color,Edges,XCoord,YCoord) :- 
+add_paths_from_row_iter(CurrentOctRow,NextOctRow,NextSqRow,GraphEdges,Color,Edges,XCoord,YCoord) :- 
 
         nth0(XCoord,CurrentOctRow,Cell),
         Cell =:= Color,
@@ -69,7 +71,9 @@ add_paths_from_row_iter(CurrentOctRow,NextOctRow,NextSqRow,Graph,Color,Edges,XCo
         append(Edges3,EdgeD,Edges4),
         append(Edges4,EdgeE,Edges5),
 
-        add_paths_from_row_iter(CurrentOctRow,NextOctRow,NextSqRow,Graph,Color,Edges5,NewXCoord,YCoord). 
+        add_paths_from_row_iter(CurrentOctRow,NextOctRow,NextSqRow,GraphEdges,Color,Edges5,NewXCoord,YCoord). 
+
+get_child_from_levelL(_,_,[],0,_).
 
 get_child_from_levelL(Color,CurrentOctRow,Edge,XCoord,YCoord) :-
         NewXCoord is XCoord - 1,
@@ -85,6 +89,8 @@ get_child_from_levelL(Color,CurrentOctRow,Edge,XCoord,_) :-
         Val =\= Color,
         Edge = [].
 
+get_child_from_levelR(_,_,[],7,_).
+
 get_child_from_levelR(Color,CurrentOctRow,Edge,XCoord,YCoord) :-
         NewXCoord is XCoord + 1,
         nth0(NewXCoord,CurrentOctRow,Val),
@@ -99,6 +105,7 @@ get_child_from_levelR(Color,CurrentOctRow,Edge,XCoord,_) :-
         Val =\= Color,
         Edge = [].
 
+get_child_from_belowL(_,_,[],0,_).
 
 get_child_from_belowL(Color,NextSqRow,Edge,XCoord,YCoord) :-
         nth0(XCoord,NextSqRow,Val),
@@ -112,7 +119,6 @@ get_child_from_belowL(Color,NextSqRow,Edge,XCoord,_) :-
         Val =\= Color,
         Edge = [].
 
-
 get_child_from_belowC(Color,NextOctRow,Edge,XCoord,YCoord) :-
         nth0(XCoord,NextOctRow,Val),
         Val =:= Color,
@@ -124,6 +130,8 @@ get_child_from_belowC(Color,NextOctRow,Edge,XCoord,_) :-
         nth0(XCoord,NextOctRow,Val),
         Val =\= Color,
         Edge = [].
+
+get_child_from_belowR(_,_,[],7,_).
 
 get_child_from_belowR(Color,NextSqRow,Edge,XCoord,YCoord) :-
         NewXCoord is XCoord +1,
@@ -140,42 +148,6 @@ get_child_from_belowR(Color,NextSqRow,Edge,XCoord,_) :-
         Edge = [].
 
               
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 % get in Starters a list with the indexes of the valid starting points
 get_valid_starters([H|_],Color,Starters) :- member(Color,H), fecthStarters(H,Color,Starters).
