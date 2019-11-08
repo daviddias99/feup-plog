@@ -80,6 +80,29 @@ insert_element_at_aux([HRow | TRow], X, Element, [HRow | NewRow], XCount) :-
 
 insert_element_at_aux([], _, _, [], _).
 
+get_diagonals_pos(7-7, Res) :-
+    Res = [
+        6-6
+    ].
+
+get_diagonals_pos(7-Y, Res) :-
+    XLeft is 7,
+    YUp is Y - 1,
+    YBottom is Y + 1,
+    Res = [
+        XLeft-YUp,
+        XLeft-YBottom
+    ].
+
+get_diagonals_pos(X-7, Res) :-
+    XLeft is X - 1,
+    XRight is X + 1,
+    YTop is 6,
+    Res = [
+        XLeft-YTop,
+        XRight-YTop
+    ].
+
 get_diagonals_pos(0-0, Res) :-
     Res = [
         1-1
