@@ -1,0 +1,1 @@
+find_all(X, (move(1,X,CurrentBoard,B),\+gameover(B,1) ),L).

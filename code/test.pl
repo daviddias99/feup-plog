@@ -38,7 +38,7 @@
 % max(V1, V2, M) :- V2 > V1, M = V2.
 
 :- [gameover].
-
+:- [squex].
 % init_board([[
 %              [0, 0, 0, 1, 2, 2, 2, 2],
 %              [0, 0, 0, 1, 1, 1, 1, 2],
@@ -62,7 +62,10 @@
 %             ]]
 % ).
 
-test() :- init_board(Board),gameover(Board,2).
+% test(L) :- init_board(Board),gameover(Board,1).
+test(L) :- init_board(Board),findall(X, (move(2,X,Board,B),\+gameover(B,1) ),L).
+
+
 
 % printing aux functions
 print_arr(H) :- print_row(H).
