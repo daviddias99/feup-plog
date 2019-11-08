@@ -1,32 +1,7 @@
 :- use_module(library(ugraphs)).
 
-init_board([[
-             [0, 0, 0, 1, 2, 2, 2, 2],
-             [0, 0, 0, 1, 1, 1, 1, 1],
-             [0, 0, 2, 2, 1, 1, 2, 1],
-             [0, 2, 2, 1, 2, 1, 2, 1],
-             [0, 0, 1, 2, 1, 2, 2, 1],
-             [0, 0, 0, 0, 2, 1, 0, 1],
-             [0, 0, 0, 0, 1, 2, 1, 0],
-             [0, 0, 0, 0, 1, 1, 2, 2]
-            ],
-            [
-             [0, 1, 1, 1, 1, 1, 1, 1, 0],
-             [2, 0, 0, 0, 1, 0, 0, 0, 2],
-             [2, 0, 0, 0, 1, 1, 1, 1, 2],
-             [2, 0, 0, 0, 0, 1, 0, 0, 2],
-             [2, 0, 0, 1, 1, 0, 0, 0, 2],
-             [2, 0, 0, 0, 0, 1, 0, 0, 2],
-             [2, 0, 0, 0, 0, 1, 1, 1, 2],
-             [2, 0, 0, 0, 0, 1, 0, 0, 2],
-             [0, 1, 1, 1, 1, 1, 1, 1, 0]
-            ]]
-).
 
-test(G,L):- init_board(Board),teste(Board,G,L).
-teste([H1,H2|_],G,L) :- build_edges(H1,H2,GraphEdges,1), vertices_edges_to_ugraph([],GraphEdges,G),reachable(3,G,L).
-
-build_graph(OctagonBoard,SquareBoard,G,Player) :- build_edges(H1,H2,GraphEdges,Player), vertices_edges_to_ugraph([],GraphEdges,G).
+build_graph(OctagonBoard,SquareBoard,G,Player) :- build_edges(OctagonBoard,SquareBoard,GraphEdges,Player), vertices_edges_to_ugraph([],GraphEdges,G).
 
 % get the graphs edges
 
@@ -197,10 +172,3 @@ fetch_starters_iter([H|T],Color,Result,Acc,N) :-
         N1 is N + 1, 
         fetch_starters_iter(T,Color,Result,Acc,N1).
 
-% printing aux functions
-print_arr(H) :- print_row(H).
-print_arr([]).
-print_arr([H|T]) :- print_row(H),nl,print_arr(T).
-
-print_row([]).
-print_row([H|T]) :- write(H), write(','),print_row(T).
