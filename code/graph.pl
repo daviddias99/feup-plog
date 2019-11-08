@@ -24,9 +24,6 @@ init_board([[
 ).
 
 test(G,L):- init_board(Board),teste(Board,G,L).
-
-testing(G):- vertices_edges_to_ugraph([],[1-3,1-2,2-1],G).
-
 teste([H1,H2|_],G,L) :- build_edges(H1,H2,GraphEdges,1), vertices_edges_to_ugraph([],GraphEdges,G),reachable(3,G,L).
 
 build_graph(OctagonBoard,SquareBoard,G,Player) :- build_edges(H1,H2,GraphEdges,Player), vertices_edges_to_ugraph([],GraphEdges,G).
