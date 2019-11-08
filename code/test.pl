@@ -63,7 +63,10 @@
 % ).
 
 % test(L) :- init_board(Board),gameover(Board,1).
-test(L) :- init_board(Board),findall(X, (move(2,X,Board,B),\+gameover(B,1) ),L).
+test() :- init_board(Board),gameover(Board,1).
+% test() :- init_board(Board),test_for_path(Board,1).
+
+% test2(L) :- init_board(Board),find_all(X, (move(1,X,CurrentBoard,B),\+gameover(B,1) ),L).
 
 
 
