@@ -1,7 +1,6 @@
 :- use_module(library(ugraphs)).
-
-
-build_graph(OctagonBoard,SquareBoard,G,Player) :- build_edges(OctagonBoard,SquareBoard,GraphEdges,Player), vertices_edges_to_ugraph([],GraphEdges,G).
+% build_graph(+OctagonBoard,+SquareBoard,+Player,-Graph)
+build_graph(OctagonBoard,SquareBoard,Player,Graph) :- build_edges(OctagonBoard,SquareBoard,GraphEdges,Player), vertices_edges_to_ugraph([],GraphEdges,Graph).
 
 % get the graphs edges
 

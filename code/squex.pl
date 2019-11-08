@@ -52,7 +52,7 @@ valid_moves_aux([Row | OctagonBoard], NumRow, Moves, MovesAcc) :-
     NewNumRow is NumRow + 1,
     valid_moves_aux(OctagonBoard, NewNumRow, Moves, NewMovesAcc).
 
-% move(+Move, +Board, -NewBoard).
+% move(+Player,+Move, +Board, -NewBoard).
 move(Player, X-Y, [OctagonBoard, SquareBoard | []], [NewOctagonBoard, NewSquareBoard | []]) :-
     valid_moves(OctagonBoard, Moves),
     member(X-Y, Moves),
