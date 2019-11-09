@@ -36,6 +36,16 @@ test_board([[
     [0, 1, 1, 0]
 ]]).
 
+
+test_sq_board([
+    [0, 1, 1, 0],
+    [2, 0, 0, 2],
+    [2, 0, 0, 2],
+    [0, 1, 1, 0]
+]).
+
+test_sq_pos([2-1, 1-2]).
+
 % valid_moves(+OctagonBoard, +Player, -ListOfMoves)​
 valid_moves_row(_NumRow, [], _Moves).
 valid_moves_row(NumRow, Row, Moves) :-
@@ -52,12 +62,12 @@ valid_moves_aux([Row | OctagonBoard], NumRow, Moves, MovesAcc) :-
     NewNumRow is NumRow + 1,
     valid_moves_aux(OctagonBoard, NewNumRow, Moves, NewMovesAcc).
 
-% move(+Move, +Board, -NewBoard).
-move(Player, X-Y, [OctagonBoard, SquareBoard | []], [NewOctagonBoard, NewSquareBoard | []]) :-
+% move(+Player, +Move, +Board, -NewBoard, -NumCuts).
+move(Player, X-Y, [OctagonBoard, SquareBoard | []], [NewOctagonBoard, NewSquareBoard | []], NumCuts) :-
     valid_moves(OctagonBoard, Moves),
     member(X-Y, Moves),
     board_insert_element_at(OctagonBoard, X, Y, Player, NewOctagonBoard),
-    update_squares(Player, X-Y, OctagonBoard, SquareBoard, NewSquareBoard).
+    update_squares(Player, X-Y, OctagonBoard, SquareBoard, NewSquareBoard, NumCuts).
 
 
 board_insert_element_at(Board, X, Y, Element, NewBoard) :-
@@ -142,10 +152,19 @@ get_element_at(Board, X-Y, Element) :-
     nth0(Y, Board, Row),
     nth0(X, Row, Element).
 
-update_squares(Player, X-Y, OctagonBoard, SquareBoard, NewSquareBoard) :-
+update_squares(Player, X-Y, OctagonBoard, SquareBoard, NewSquareBoard, NumCuts) :-
     get_diagonals_pos(X-Y, DiagonalsPos),
     get_squares_pos(Player, OctagonBoard, X-Y, DiagonalsPos, SquaresPos),
+    check_cut(Player, SquareBoard, SquaresPos, NumCuts),
     place_squares(Player, SquareBoard, SquaresPos, NewSquareBoard).
+
+
+check_cut(Player, SquareBoard, SquaresPos, NumCuts) :- 
+    findall(Pos, (member(Pos, SquaresPos), get_element_at(SquareBoard, Pos, Element), Element \== Player, Element \== 0), Cuts),
+    length(Cuts, NumCuts).
+
+
+
 
 get_squares_pos(_, _, _, [], []).
 
