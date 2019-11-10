@@ -153,21 +153,3 @@ make_undirected_iter([A-B|T],Graph,Acc) :-
         append(Acc1,[B-A],Acc2),
         make_undirected_iter(T,Graph,Acc2).
 
-
-% get in Starters a list with the indexes of the valid starting points
-get_valid_starters([H|_],Color,Starters) :- member(Color,H), fecthStarters(H,Color,Starters).
-
-fetch_starters(Row, Color, Result) :- fetch_starters_iter(Row,Color,Result,[],0).
-
-fetch_starters_iter([],_,Result,Result,_).
-fetch_starters_iter([H|T],Color,Result,Acc,N) :-  
-        H =:= Color, 
-        append(Acc,[N],Acc1),
-        N1 is N + 1, 
-        fetch_starters_iter(T,Color,Result,Acc1,N1).
-
-fetch_starters_iter([H|T],Color,Result,Acc,N) :-  
-        H =\= Color, 
-        N1 is N + 1, 
-        fetch_starters_iter(T,Color,Result,Acc,N1).
-
