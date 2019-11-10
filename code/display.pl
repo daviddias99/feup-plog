@@ -1,25 +1,26 @@
 % display board
+:- [generate].
 
-display_game([OctagonBoard, SquareBoard |[]], Player) :-
-    display_horizontal_coordinates(a, 8), nl, 
-    display_board(OctagonBoard, SquareBoard, 0), nl, nl,
+display_game([OctagonBoard, SquareBoard, Height, Width |[]], Player) :-
+    display_horizontal_coordinates(a, Width), nl, 
+    display_board(OctagonBoard, SquareBoard, 0, Height, Width), nl, nl,
     write("Player "), write_player(Player), write('\'s turn').
 
 write_player(1) :- ansi_format([bold, fg(blue)], 1, [world]).
 write_player(2) :- ansi_format([bold, fg(red)], 2, [world]).
 
-display_board([], [], _).
-display_board([], [SquareRow | SquareBoard], Y) :- 
-    display_square_row_borders(SquareRow, Y), 
+display_board([], [], _, _, _).
+display_board([], [SquareRow | SquareBoard], Y, Height, Width) :- 
+    display_square_row_borders(SquareRow, Y, Height, Width), 
     YNext is Y + 1,
-    display_board([], SquareBoard, YNext).
-display_board([OctagonRow | OctagonBoard], [SquareRow | SquareBoard], Y) :-
-    display_square_row_borders(SquareRow, Y), nl,
+    display_board([], SquareBoard, YNext, Width, Height).
+display_board([OctagonRow | OctagonBoard], [SquareRow | SquareBoard], Y, Height, Width) :-
+    display_square_row_borders(SquareRow, Y, Height, Width), nl,
     ansi_format(bold, Y, [world]), write(' '),  
     display_octagon_hor_separator(), 
     display_octagon_row(OctagonRow), nl,
     YNext is Y + 1,
-    display_board(OctagonBoard, SquareBoard, YNext).
+    display_board(OctagonBoard, SquareBoard, YNext, Height, Width).
 
 
 % display pieces
@@ -38,10 +39,10 @@ display_octagon_piece(_) :- ansi_format([], ' ', [world]).
 display_octagon_row([]).
 display_octagon_row([H | T]) :- display_octagon_piece(H), display_octagon_hor_separator(), display_octagon_row(T). 
 
-display_square_row_borders(SquareRow, Y) :-
-    write('    '), display_lower_octagon_cell(Y), nl,
+display_square_row_borders(SquareRow, Y, Height, Width) :-
+    write('    '), display_lower_octagon_cell(Y, Height, Width, 0), nl,
     write('     '), display_square_row(SquareRow), nl,
-    write('    '), display_upper_octagon_cell(Y).
+    write('    '), display_upper_octagon_cell(Y, Height, Width, 0).
 
 display_square_row([]).
 display_square_row([H | []]) :- display_square_piece(H).
@@ -50,13 +51,57 @@ display_square_row([H | T]) :- display_square_piece(H), display_octagon_ver_sepa
 
 % auxiliary functions to display borders of the cells
 
-display_upper_octagon_cell(0) :- ansi_format(bold, '  \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 ', [world]).
-display_upper_octagon_cell(8) :- ansi_format(bold, '        \u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571 ', [world]).
-display_upper_octagon_cell(_) :- ansi_format(bold, '\u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571', [world]).
+% display_upper_octagon_cell(0) :- ansi_format(bold, '  \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 ', [world]).
+% display_upper_octagon_cell(8) :- ansi_format(bold, '        \u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571 ', [world]).
+% display_upper_octagon_cell(_) :- ansi_format(bold, '\u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571', [world]).
 
-display_lower_octagon_cell(0) :- ansi_format(bold, '        \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572', [world]).
-display_lower_octagon_cell(8) :- ansi_format(bold, '  \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 ', [world]).
-display_lower_octagon_cell(_) :- ansi_format(bold, '\u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572', [world]).
+display_upper_octagon_cell(_, _, Width, X) :- X > Width.
+
+display_upper_octagon_cell(0, Height, Width, 0) :-
+    ansi_format(bold, '  \u2571     ', [world]),
+    display_upper_octagon_cell(0, Height, Width, 1).
+
+display_upper_octagon_cell(0, _Height, Width, Width) :-
+    ansi_format(bold, '\u2572', [world]).
+
+display_upper_octagon_cell(Height, Height, Width, 0) :-
+    ansi_format(bold, '        ', [world]),
+    display_upper_octagon_cell(Height, Height, Width, 1).
+
+display_upper_octagon_cell(Height, Height, Width, Width).
+
+display_upper_octagon_cell(Y, Height, Width, X) :-
+    X =< Width,
+    ansi_format(bold, '\u2572 \u2571     ', [world]),
+    XNext is X + 1,
+    display_upper_octagon_cell(Y, Height, Width, XNext).
+
+
+% display_lower_octagon_cell(0) :- ansi_format(bold, '        \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572', [world]).
+% display_lower_octagon_cell(8) :- ansi_format(bold, '  \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 ', [world]).
+% display_lower_octagon_cell(_) :- ansi_format(bold, '\u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572', [world]).
+
+display_lower_octagon_cell(0, Height, Width, 0) :-
+    ansi_format(bold, '        ', [world]),
+    display_lower_octagon_cell(0, Height, Width, 1).
+
+display_lower_octagon_cell(0, _Height, Width, Width).
+
+display_lower_octagon_cell(Height, Height, Width, 0) :-
+    ansi_format(bold, '  \u2572     ', [world]),
+    display_lower_octagon_cell(Height, Height, Width, 1).
+
+display_lower_octagon_cell(Height, Height, Width, Width) :-
+    ansi_format(bold, '\u2571', [world]).
+
+display_lower_octagon_cell(_, _, Width, X) :- X > Width.
+display_lower_octagon_cell(Y, Height, Width, X) :-
+    X =< Width,
+    ansi_format(bold, '\u2571 \u2572     ', [world]),
+    XNext is X + 1,
+    display_lower_octagon_cell(Y, Height, Width, XNext).
+
+
 
 display_octagon_ver_separator() :- write('  \u2501\u2501\u2501  ').
 display_octagon_hor_separator() :- write('   \u2503   ').
