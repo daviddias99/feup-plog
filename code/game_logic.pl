@@ -16,7 +16,7 @@ valid_moves_aux([Row | OctagonBoard], NumRow, Moves, MovesAcc) :-
     valid_moves_aux(OctagonBoard, NewNumRow, Moves, NewMovesAcc).
 
 % move(+Player,+Move, +Board, -NewBoard).
-move(Player, X-Y, [OctagonBoard, SquareBoard | []], [NewOctagonBoard, NewSquareBoard | []], NumCuts) :-
+move(Player, X-Y, [OctagonBoard, SquareBoard, Width, Height | []], [NewOctagonBoard, NewSquareBoard, Width, Height | []], NumCuts) :-
     valid_moves(OctagonBoard, Moves),
     member(X-Y, Moves),
     board_insert_element_at(OctagonBoard, X, Y, Player, NewOctagonBoard),

@@ -9,10 +9,10 @@ input_board_size(Width, Height) :-
 input_bot_level(Level) :-
     get_int_between(' > CPU level ', Level, 1, 2).
 
-input_move(X, Y) :- 
+input_move(X, Y, Height, Width) :- 
     ansi_format([bold], ' > Choose move ', [world]), nl,
-    input_hor_coord(X),
-    input_ver_coord(Y).
+    input_hor_coord(X, Width), !,
+    input_ver_coord(Y, Height), !.
 
 input_ver_coord(Coord, Height) :- 
     MaxCoord is Height - 1,

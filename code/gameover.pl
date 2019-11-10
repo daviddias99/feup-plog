@@ -8,24 +8,24 @@
 % first, gameover checks if there is a path that unites Player's board edge-rows
 gameover(Board,Player) :- 
     test_for_path(Board,Player),
-    getOtherPlayer(Player,OtherPlayer),
-    findall(PMove, (move(OtherPlayer,PMove,Board,NextBoard),\+test_for_path(NextBoard,Player) ),Result),
+    get_other_player(Player,OtherPlayer),
+    findall(PMove, (move(OtherPlayer,PMove,Board,NextBoard, _),\+test_for_path(NextBoard,Player) ),Result),
     Result = [].
 
-getOtherPlayer(1,2).
-getOtherPlayer(2,1).
+get_other_player(1,2).
+get_other_player(2,1).
 
 
 % check if there is a path uniting Player's board edge-rows (search starts at the upper row)
 % get the starters (octagon pieces of Player that are touching it's upper row)
 % build the connecting graph
-test_for_path([OctagonBoard,SquareBoard],Player):-
+test_for_path([OctagonBoard,SquareBoard | _],Player):-
     Player =:= 1,
     get_valid_starters(OctagonBoard,Player,Starters),
     build_graph(OctagonBoard,SquareBoard,Player,Graph),
     reachable_from_starters(Graph,Starters).
 
-test_for_path([OctagonBoard,SquareBoard],Player):-
+test_for_path([OctagonBoard,SquareBoard | _],Player):-
     Player =:= 2,
     transpose(OctagonBoard,TransposedOctagonBoard), 
     transpose(SquareBoard,TransposedSquareBoard),
