@@ -6,23 +6,31 @@
 %
 
 % first, gameover checks if there is a path that unites Player's board edge-rows
-gameover([OctagonBoard,SquareBoard],Player) :- 
-    Player =:= 1,
-    test_for_path(OctagonBoard,SquareBoard,Player).
+gameover(Board,Player) :- 
+    test_for_path(Board,Player),
+    getOtherPlayer(Player,OtherPlayer),
+    findall(PMove, (move(OtherPlayer,PMove,Board,NextBoard),\+test_for_path(NextBoard,Player) ),Result),
+    Result = [].
 
-gameover([OctagonBoard,SquareBoard],Player) :- 
-    Player =:= 2,
-    transpose(OctagonBoard,TransposedOctagonBoard), 
-    transpose(SquareBoard,TransposedSquareBoard), 
-    test_for_path(TransposedOctagonBoard,TransposedSquareBoard,Player).
+getOtherPlayer(1,2).
+getOtherPlayer(2,1).
 
 
-% check if there is a bath uniting Player's board edge-rows (search starts at the upper row)
+% check if there is a path uniting Player's board edge-rows (search starts at the upper row)
 % get the starters (octagon pieces of Player that are touching it's upper row)
 % build the connecting graph
-test_for_path(OctagonBoard,SquareBoard,Player):-
+test_for_path([OctagonBoard,SquareBoard],Player):-
+    Player =:= 1,
     get_valid_starters(OctagonBoard,Player,Starters),
-    build_graph(OctagonBoard,SquareBoard,Graph,Player),
+    build_graph(OctagonBoard,SquareBoard,Player,Graph),
+    reachable_from_starters(Graph,Starters).
+
+test_for_path([OctagonBoard,SquareBoard],Player):-
+    Player =:= 2,
+    transpose(OctagonBoard,TransposedOctagonBoard), 
+    transpose(SquareBoard,TransposedSquareBoard),
+    get_valid_starters(TransposedOctagonBoard,Player,Starters),
+    build_graph(TransposedOctagonBoard,TransposedSquareBoard,Player,Graph),
     reachable_from_starters(Graph,Starters).
 
 % check if the opposing edge is reachable from any of the starting octagons
