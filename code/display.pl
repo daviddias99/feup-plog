@@ -100,7 +100,8 @@ display_menu :-
     ansi_format(bold, '[1]\t   PLAYER 1 vs. PLAYER 2', [world]), nl,
     ansi_format(bold, '[2]\t     PLAYER vs. CPU', [world]), nl,
     ansi_format(bold, '[3]\t        CPU vs. PLAYER', [world]), nl,
-    ansi_format(bold, '[4]\t      CPU 1 vs. CPU 2', [world]), nl.
+    ansi_format(bold, '[4]\t      CPU 1 vs. CPU 2', [world]), nl,
+    ansi_format(bold, '[0]\t           EXIT', [world]), nl.
 
 
 display_logo :-

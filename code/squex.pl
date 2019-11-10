@@ -1,6 +1,11 @@
-:- [display], [input].
+:- [display], [input], [generate].
 
-start(Player) :- init_board(Board), display_game(Board, Player).
+play :-
+    display_main_screen,
+    input_menu_option(_Option),
+    repeat, input_board_size(Height, Width), generate_board(Height, Width, Board), !,
+    display_game(Board, 1).
+
 
 init_board([[
              [0, 0, 0, 0, 0, 0, 0, 0],
