@@ -9,7 +9,7 @@
 gameover(Board,Player) :- 
     test_for_path(Board,Player),
     get_other_player(Player,OtherPlayer),
-    findall(PMove, (move(OtherPlayer,PMove,Board,NextBoard, _),\+test_for_path(NextBoard,Player) ),Result),
+    findall(PMove, (move(OtherPlayer,PMove,Board,NextBoard,NumCuts),NumCuts =\= 0,\+test_for_path(NextBoard,Player)),Result),
     Result = [].
 
 get_other_player(1,2).
