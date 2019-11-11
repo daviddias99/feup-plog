@@ -1,4 +1,4 @@
-generate_board(Width, Height, [OctagonBoard, SquareBoard, Height, Width |[]]) :-
+generate_initial_game_state(Width, Height, P1Type, P2Type, [OctagonBoard, SquareBoard, Height, Width, P1Type, P2Type, 1, 0 |[]]) :-
     Width > 2,
     Height > 2,
     generate_octagon_board(Width, Height, OctagonBoard),

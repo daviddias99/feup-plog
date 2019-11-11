@@ -1,10 +1,20 @@
 % display board
 :- [generate].
 
-display_game([OctagonBoard, SquareBoard, Height, Width |[]], Player) :-
+display_game([OctagonBoard, SquareBoard, Height, Width, _, _, Player, CutHappened |[]]) :-
+    display_cut_message(CutHappened), nl,
     display_horizontal_coordinates(a, Width), nl, 
     display_board(OctagonBoard, SquareBoard, 0, Height, Width), nl, nl,
-    write("Player "), write_player(Player), write('\'s turn').
+    ansi_format([bold], 'Player ', [world]), write_player(Player), ansi_format([bold], '\'s turn.', [world]).
+
+display_cut_message(0).
+display_cut_message(1) :-
+    ansi_format([bold], 'A cut has happened. Next player gets 2 consecutive turns.', [world]).
+    
+display_gameover([OctagonBoard, SquareBoard, Height, Width, _, _, Player |_]) :-
+    display_horizontal_coordinates(a, Width), nl, 
+    display_board(OctagonBoard, SquareBoard, 0, Height, Width), nl, nl,
+    ansi_format([bold], 'PLAYER ', [world]), write_player(Player), ansi_format([bold], ' WON!', [world]).
 
 write_player(1) :- ansi_format([bold, fg(blue)], 1, [world]).
 write_player(2) :- ansi_format([bold, fg(red)], 2, [world]).

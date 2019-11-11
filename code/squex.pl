@@ -28,25 +28,43 @@ init_board([[
 play :-
     display_main_screen,
     input_menu_option(Option),
-    repeat, input_board_size(Height, Width), generate_board(Height, Width, Board), !,
-    start_game(Option, Board).
+    get_players_type(Option, P1Type, P2Type),
+    repeat, input_board_size(Height, Width), generate_initial_game_state(Height, Width, P1Type, P2Type, GameState), !,
+    game_loop(GameState).
 
-start_game(1, Board) :-
-    game_loop(Board, 1).
+get_players_type(1, 'P', 'P').
+get_players_type(2, 'P', P2Type) :-
+    input_bot_level(P2Type).
+get_players_type(3, P1Type, 'P') :-
+    input_bot_level(P1Type).
+get_players_type(4, P1Type, P2Type) :-
+    input_bot_level(P1Type, 1),
+    input_bot_level(P2Type, 2).
 
-game_loop(Board, Player) :-
-    Board = [_, _, Height, Width | []],
-    display_game(Board, Player), nl, nl,
+%
+%
+game_loop(GameState) :-
+    display_game(GameState), nl, nl,
     repeat,
-    input_move(X, Y, Height, Width),
-    move(Player, X-Y, Board, NewBoard, _), !,
-    continue_game(NewBoard, Player).
+    get_move(Move, GameState),
+    move(Move, GameState, NewGameState), !,
+    continue_game(NewGameState).
 
-continue_game(NewBoard, Player) :-
-    gameover(NewBoard, Player), !, write(Player), write(' won'), nl.
 
-continue_game(NewBoard, Player) :-
-    get_other_player(Player, NextPlayer),
-    game_loop(NewBoard, NextPlayer).
+%continue_game(NewGameState) :-
+    % gameover(NewGameState, Player), !, display_gameover(NewGameState, Player).
+
+continue_game(NewGameState) :-
+    game_loop(NewGameState).
+
+get_move(Move, GameState) :-
+    GameState = [_, _, _, _, _, _, Player | _ ],
+    CurrPlayerTypeIndex is 3 + Player,
+    nth0(CurrPlayerTypeIndex, GameState, CurrPlayerType),
+    get_move_aux(Move, GameState, CurrPlayerType).
+
+get_move_aux(Move, GameState, 'P') :-
+    GameState = [_, _, Width, Height, _, _, _, _| []],
+    input_move(Move, Height, Width).
 
 

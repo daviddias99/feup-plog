@@ -9,7 +9,14 @@ input_board_size(Width, Height) :-
 input_bot_level(Level) :-
     get_int_between(' > CPU level ', Level, 1, 2).
 
-input_move(X, Y, Height, Width) :- 
+input_bot_level(Level, 1) :-
+    get_int_between(' > CPU 1 level ', Level, 1, 2).
+
+input_bot_level(Level, 2) :-
+    get_int_between(' > CPU 2 level ', Level, 1, 2).
+
+
+input_move(X-Y, Height, Width) :- 
     ansi_format([bold], ' > Choose move ', [world]), nl,
     input_hor_coord(X, Width), !,
     input_ver_coord(Y, Height), !.
