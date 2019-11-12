@@ -16,19 +16,19 @@ valid_moves_aux([Row | OctagonBoard], NumRow, Moves, MovesAcc) :-
     valid_moves_aux(OctagonBoard, NewNumRow, Moves, NewMovesAcc).
 
 % move(+Player,+Move, +Board, -NewBoard).
-move(X-Y, [OctagonBoard, SquareBoard, Width, Height, P1Type, P2Type, Player, NumPlays | []], [NewOctagonBoard, NewSquareBoard, Width, Height, P1Type, P2Type, NewPlayer, NewNumPlays | []]) :-
+move(X-Y, [OctagonBoard, SquareBoard, Width, Height, P1Type, P2Type, Player, CutInfo | []], [NewOctagonBoard, NewSquareBoard, Width, Height, P1Type, P2Type, NewPlayer, NewCutInfo | []]) :-
     valid_moves(OctagonBoard, Moves),
     member(X-Y, Moves),
     board_insert_element_at(OctagonBoard, X, Y, Player, NewOctagonBoard),
     update_squares(Player, X-Y, OctagonBoard, SquareBoard, NewSquareBoard, NumCuts),
-    update_next_player(Player, NumPlays, NewPlayer, NewNumPlays, NumCuts).
+    update_next_player(Player, CutInfo, NewPlayer, NewCutInfo, NumCuts).
 
-update_next_player(1, _, 2, 1, NumCuts) :- NumCuts > 0.
-update_next_player(2, _, 1, 1, NumCuts) :- NumCuts > 0.
-update_next_player(1, 1, 1, 0, NumCuts) :- NumCuts == 0. 
-update_next_player(2, 1, 2, 0, NumCuts) :- NumCuts == 0.
-update_next_player(2, 0, 1, 0, NumCuts) :- NumCuts == 0.
-update_next_player(1, 0, 2, 0, NumCuts) :- NumCuts == 0.
+update_next_player(1, _, 2, 2-1, NumCuts) :- NumCuts > 0.
+update_next_player(2, _, 1, 2-1, NumCuts) :- NumCuts > 0.
+update_next_player(1, 2-1, 1, 1-1, NumCuts) :- NumCuts == 0. 
+update_next_player(2, 2-1, 2, 1-1, NumCuts) :- NumCuts == 0.
+update_next_player(2, 1-_, 1, 1-0, NumCuts) :- NumCuts == 0.
+update_next_player(1, 1-_, 2, 1-0, NumCuts) :- NumCuts == 0.
 
 board_insert_element_at(Board, X, Y, Element, NewBoard) :-
     nth0(Y, Board, Row),

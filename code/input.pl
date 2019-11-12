@@ -18,8 +18,8 @@ input_bot_level(Level, 2) :-
 
 input_move(X-Y, Height, Width) :- 
     ansi_format([bold], ' > Choose move ', [world]), nl,
-    input_hor_coord(X, Width), !,
-    input_ver_coord(Y, Height), !.
+    input_hor_coord(X, Width), 
+    input_ver_coord(Y, Height).
 
 input_ver_coord(Coord, Height) :- 
     MaxCoord is Height - 1,

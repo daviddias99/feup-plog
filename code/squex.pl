@@ -1,4 +1,4 @@
-:- [display], [input], [generate], [gameover], [game_logic].
+:- [display], [input], [game_model], [game_logic], [gameover]. 
 
 init_board([[
              [0, 0, 0, 1, 0, 0, 2, 0],
@@ -50,7 +50,6 @@ game_loop(GameState) :-
     move(Move, GameState, NewGameState), !,
     continue_game(NewGameState).
 
-
 %continue_game(NewGameState) :-
     % gameover(NewGameState, Player), !, display_gameover(NewGameState, Player).
 
@@ -58,13 +57,11 @@ continue_game(NewGameState) :-
     game_loop(NewGameState).
 
 get_move(Move, GameState) :-
-    GameState = [_, _, _, _, _, _, Player | _ ],
-    CurrPlayerTypeIndex is 3 + Player,
-    nth0(CurrPlayerTypeIndex, GameState, CurrPlayerType),
-    get_move_aux(Move, GameState, CurrPlayerType).
+    get_game_current_player_type(GameState, Type),
+    get_move_aux(Move, GameState, Type).
 
 get_move_aux(Move, GameState, 'P') :-
-    GameState = [_, _, Width, Height, _, _, _, _| []],
+    get_game_board_size(GameState, Height, Width),
     input_move(Move, Height, Width).
 
 

@@ -1,6 +1,3 @@
-% display board
-:- [generate].
-
 display_game([OctagonBoard, SquareBoard, Height, Width, _, _, Player, CutHappened |[]]) :-
     display_cut_message(CutHappened), nl,
     display_horizontal_coordinates(a, Width), nl, 
