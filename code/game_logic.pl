@@ -57,22 +57,22 @@ insert_element_at_aux([], _, _, [], _).
 
 get_diagonals_pos(0-0, _, _, [1-1]).
 get_diagonals_pos(X-0, _, Width, [CoordX-1]) :-
-    X = Width - 1,
-    CoordX is X - 2.
+    X =:= Width - 1,
+    CoordX is X - 1.
 
 get_diagonals_pos(0-Y, Height, _, [1-CoordY]) :-
-    Y = Height - 1,
-    CoordY is Y - 2.
+    Y =:= Height - 1,
+    CoordY is Y - 1.
 
 
 get_diagonals_pos(X-Y, Height, Width, [CoordX-CoordY]) :-
-    Y = Height - 1,
-    X = Width - 1,
-    CoordX is X - 2,
-    CoordY is Y - 2.
+    Y =:= Height - 1,
+    X =:= Width - 1,
+    CoordX is X - 1,
+    CoordY is Y - 1.
 
 get_diagonals_pos(X-Y, _, Width, Res) :-
-    X = Width - 1,
+    X =:= Width - 1,
     XLeft is X - 2,
     YUp is Y - 1,
     YBottom is Y + 1,
@@ -82,8 +82,8 @@ get_diagonals_pos(X-Y, _, Width, Res) :-
     ].
 
 get_diagonals_pos(X-Y, Height, _, Res) :-
-    Y = Height - 1,
-    YTop is Height - 2,
+    Y =:= Height - 1,
+    YTop is Y - 2,
     XLeft is X - 1,
     XRight is X + 1,
     Res = [
