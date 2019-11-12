@@ -18,6 +18,18 @@ get_game_current_player_type(GameState, Type) :-
 get_game_board_size(GameState, Height, Width) :-
     GameState = [_, _, Height, Width | _].
 
+get_game_board(GameState,[OctagonBoard,SquareBoard,Height,Width]) :-
+    GameState = [OctagonBoard, SquareBoard, Height, Width | _].
+
+get_game_previous_player(GameState, PreviousPlayer) :-
+    GameState = [_,_,_,_,_,_,NextPlayer, _-_],
+    get_other_player(NextPlayer,PreviousPlayer).
+
+get_game_previous_player(GameState, NextPlayer) :-
+    GameState = [_,_,_,_,_,_,NextPlayer, 1-1],
+
+get_other_player(1,2).
+get_other_player(2,1).
 
 generate_octagon_board(Width, Height, OctagonBoard) :-
     generate_octagon_board_row(Width, Row),
