@@ -46,7 +46,7 @@ get_players_type(4, P1Type, P2Type) :-
 
 game_loop(GameState) :-
     display_game(GameState), 
-    get_move(GameState, Move), move(Move, GameState, NewGameState), 
+    repeat, get_move(GameState, Move), move(Move, GameState, NewGameState), !,
     game_loop(NewGameState).
 
 get_move(GameState, Move) :-

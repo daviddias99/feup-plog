@@ -5,7 +5,7 @@ display_game([OctagonBoard, SquareBoard, Height, Width, _, _, Player, CutHappene
     ansi_format([bold], 'Player ', [world]), write_player(Player), ansi_format([bold], '\'s turn.', [world]), nl, nl.
 
 display_cut_message(2-1) :-
-    ansi_format([bold], 'A cut has happened. Next player gets 2 consecutive turns.', [world]).
+    ansi_format([bold], 'A cut has happened. Next player gets 2 consecutive turns.', [world]), !.
 display_cut_message(_).
 
 display_gameover([OctagonBoard, SquareBoard, Height, Width, _, _, Player |_]) :-

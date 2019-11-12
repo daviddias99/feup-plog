@@ -20,16 +20,11 @@ validate_move(OctagonBoard, Move) :-
     board_get_element_at(OctagonBoard, Move, 0).
 
 % move(+Player,+Move, +Board, -NewBoard).
-move(Move, [OctagonBoard, SquareBoard, Width, Height, P1Type, P2Type, Player, CutInfo | []], [NewOctagonBoard, NewSquareBoard, Width, Height, P1Type, P2Type, NewPlayer, NewCutInfo | []]) :-
+move(Move, [OctagonBoard, SquareBoard, Height, Width, P1Type, P2Type, Player, CutInfo | []], [NewOctagonBoard, NewSquareBoard, Height, Width, P1Type, P2Type, NewPlayer, NewCutInfo | []]) :-
     validate_move(OctagonBoard, Move),
-    write('validated'), nl,
     board_insert_element_at(OctagonBoard, Move, Player, NewOctagonBoard),
-    write('inserted'), nl, 
-    update_squares(Player, Move, OctagonBoard, SquareBoard, NewSquareBoard, NumCuts),
-    write('Num Cuts '), write(NumCuts), nl,
-    update_next_player(Player, CutInfo, NewPlayer, NewCutInfo, NumCuts),
-    write('Player '), write(Player), write(' Next Player '), write(NewPlayer), nl,
-    write('Cut info'), write(CutInfo), write(' NewCutInfo '), write(NewCutInfo), nl, nl.
+    update_squares(Player, Move, OctagonBoard, SquareBoard, NewSquareBoard, Height, Width, NumCuts),
+    update_next_player(Player, CutInfo, NewPlayer, NewCutInfo, NumCuts).
 
 update_next_player(1, _, 2, 2-1, NumCuts) :- NumCuts > 0.
 update_next_player(2, _, 1, 2-1, NumCuts) :- NumCuts > 0.
@@ -60,28 +55,25 @@ insert_element_at_aux([HRow | TRow], X, Element, [HRow | NewRow], XCount) :-
 
 insert_element_at_aux([], _, _, [], _).
 
-get_diagonals_pos(0-0, Res) :-
-    Res = [
-        1-1
-    ].
+get_diagonals_pos(0-0, _, _, [1-1]).
+get_diagonals_pos(X-0, _, Width, [CoordX-1]) :-
+    X = Width - 1,
+    CoordX is X - 2.
 
-get_diagonals_pos(7-0, Res) :-
-    Res = [
-        6-1
-    ].
+get_diagonals_pos(0-Y, Height, _, [1-CoordY]) :-
+    Y = Height - 1,
+    CoordY is Y - 2.
 
-get_diagonals_pos(0-7, Res) :-
-    Res = [
-        1-6
-    ].
 
-get_diagonals_pos(7-7, Res) :-
-    Res = [
-        6-6
-    ].
+get_diagonals_pos(X-Y, Height, Width, [CoordX-CoordY]) :-
+    Y = Height - 1,
+    X = Width - 1,
+    CoordX is X - 2,
+    CoordY is Y - 2.
 
-get_diagonals_pos(7-Y, Res) :-
-    XLeft is 6,
+get_diagonals_pos(X-Y, _, Width, Res) :-
+    X = Width - 1,
+    XLeft is X - 2,
     YUp is Y - 1,
     YBottom is Y + 1,
     Res = [
@@ -89,17 +81,18 @@ get_diagonals_pos(7-Y, Res) :-
         XLeft-YBottom
     ].
 
-get_diagonals_pos(X-7, Res) :-
+get_diagonals_pos(X-Y, Height, _, Res) :-
+    Y = Height - 1,
+    YTop is Height - 2,
     XLeft is X - 1,
     XRight is X + 1,
-    YTop is 6,
     Res = [
         XLeft-YTop,
         XRight-YTop
     ].
 
 
-get_diagonals_pos(0-Y, Res) :-
+get_diagonals_pos(0-Y, _, _, Res) :-
     XRight is 1,
     YUp is Y - 1,
     YBottom is Y + 1,
@@ -108,7 +101,7 @@ get_diagonals_pos(0-Y, Res) :-
         XRight-YBottom
     ].
 
-get_diagonals_pos(X-0, Res) :-
+get_diagonals_pos(X-0, _, _, Res) :-
     XLeft is X - 1,
     XRight is X + 1,
     YBottom is 1,
@@ -117,7 +110,7 @@ get_diagonals_pos(X-0, Res) :-
         XRight-YBottom
     ].
 
-get_diagonals_pos(X-Y, Res) :-
+get_diagonals_pos(X-Y, _, _, Res) :-
     XLeft is X - 1,
     XRight is X + 1,
     YUp is Y - 1,
@@ -133,8 +126,8 @@ board_get_element_at(Board, X-Y, Element) :-
     nth0(Y, Board, Row),
     nth0(X, Row, Element).
 
-update_squares(Player, X-Y, OctagonBoard, SquareBoard, NewSquareBoard, NumCuts) :-
-    get_diagonals_pos(X-Y, DiagonalsPos),
+update_squares(Player, X-Y, OctagonBoard, SquareBoard, NewSquareBoard, Height, Width, NumCuts) :-
+    get_diagonals_pos(X-Y, Height, Width, DiagonalsPos),
     get_squares_pos(Player, OctagonBoard, X-Y, DiagonalsPos, SquaresPos),
     check_cut(Player, SquareBoard, SquaresPos, NumCuts),
     place_squares(Player, SquareBoard, SquaresPos, NewSquareBoard).
