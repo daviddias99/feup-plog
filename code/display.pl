@@ -1,13 +1,32 @@
+% In this file:
+%
+% display_game(+GameState)
+% display_gameover(+GameState)
+% display_board(+OctagonBoard, +SquareBoard, +FirstVerticalCoord, +BoardHeight, +BoardWidth)
+% display_cut_message(+CutInfo)
+% write_player(+Player)
+% display_square_piece(+Player)
+% display_octagon_piece(+Player)
+% display_logo()
+% display_menu()
+% display_main_screen()
+% display_octagon_row(+Row)
+% display_square_row_borders(+Row, +CurrentY, +Height, +Width)
+% display_square_row(+Row)
+
+
+
+
 display_game([OctagonBoard, SquareBoard, Height, Width, _, _, Player, CutHappened |[]]) :-
     display_cut_message(CutHappened), nl,
     display_horizontal_coordinates(a, Width), nl, 
     display_board(OctagonBoard, SquareBoard, 0, Height, Width), nl, nl,
-    ansi_format([bold], 'Player ', [world]), write_player(Player), ansi_format([bold], '\'s turn.', [world]).
+    ansi_format([bold], 'Player ', [world]), write_player(Player), ansi_format([bold], '\'s turn.', [world]), nl, nl.
 
-display_cut_message(0).
-display_cut_message(1) :-
-    ansi_format([bold], 'A cut has happened. Next player gets 2 consecutive turns.', [world]).
-    
+display_cut_message(2-1) :-
+    ansi_format([bold], 'A cut has happened. Next player gets 2 consecutive turns.', [world]), !.
+display_cut_message(_).
+
 display_gameover([OctagonBoard, SquareBoard, Height, Width, _, _, Player |_]) :-
     display_horizontal_coordinates(a, Width), nl, 
     display_board(OctagonBoard, SquareBoard, 0, Height, Width), nl, nl,

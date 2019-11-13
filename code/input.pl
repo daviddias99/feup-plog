@@ -61,3 +61,12 @@ digit_list_to_int_aux([Digit | DigitList], Int, Res) :-
     atom_number(Digit, Num), 
     NewInt is Int * 10 + Num, 
     digit_list_to_int_aux(DigitList, NewInt, Res).
+
+press_enter_to_continue :-
+    ansi_format([bold], 'Press ', [world]),
+    ansi_format([bold, fg(green)], '<ENTER>', [world]),
+    ansi_format([bold], ' to continue.', [world]),
+    wait_for_enter.
+
+wait_for_enter :- get_char('\n'), !.
+wait_for_enter :- get_char(_), wait_for_enter. 

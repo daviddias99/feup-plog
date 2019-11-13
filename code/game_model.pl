@@ -18,6 +18,9 @@ get_game_current_player_type(GameState, Type) :-
 get_game_board_size(GameState, Height, Width) :-
     GameState = [_, _, Height, Width | _].
 
+get_game_octagon_board(GameState, OctagonBoard) :-
+    GameState = [OctagonBoard | _].
+
 get_game_board(GameState,[OctagonBoard,SquareBoard,Height,Width]) :-
     GameState = [OctagonBoard, SquareBoard, Height, Width | _].
 

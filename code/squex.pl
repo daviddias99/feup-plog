@@ -1,4 +1,4 @@
-:- [display], [input], [game_model], [game_logic], [gameover]. 
+:- [display], [input], [game_model], [game_logic], [gameover], [bot]. 
 
 init_board([[
              [0, 0, 0, 1, 0, 0, 2, 0],
@@ -41,27 +41,25 @@ get_players_type(4, P1Type, P2Type) :-
     input_bot_level(P1Type, 1),
     input_bot_level(P2Type, 2).
 
-%
-%
+game_loop(NewGameState) :-
+    gameover(NewGameState, Player), !, display_gameover(NewGameState, Player).
+
 game_loop(GameState) :-
-    display_game(GameState), nl, nl,
-    repeat,
-    get_move(Move, GameState),
-    move(Move, GameState, NewGameState), !,
-    continue_game(NewGameState).
-
-%continue_game(NewGameState) :-
-    % gameover(NewGameState, Player), !, display_gameover(NewGameState, Player).
-
-continue_game(NewGameState) :-
+    display_game(GameState), 
+    repeat, get_move(GameState, Move), move(Move, GameState, NewGameState), !,
     game_loop(NewGameState).
 
-get_move(Move, GameState) :-
+get_move(GameState, Move) :-
     get_game_current_player_type(GameState, Type),
-    get_move_aux(Move, GameState, Type).
+    choose_move(GameState, Type, Move).
 
-get_move_aux(Move, GameState, 'P') :-
+choose_move(GameState, 'P', Move) :-
     get_game_board_size(GameState, Height, Width),
     input_move(Move, Height, Width).
+
+choose_move(GameState, 1, Move) :-
+    random_move(GameState, Move),
+    write('CHOSEN MOVE: '), write(Move), nl,
+    press_enter_to_continue.
 
 

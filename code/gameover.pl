@@ -1,6 +1,6 @@
 :- use_module(library(clpfd)).
 :- [graph].
-:- [game_model].
+:- ensure_loaded('game_model.pl').
 
 
 %   In this file:
@@ -21,8 +21,7 @@
 */
 
 gameover(GameState,Player) :- 
-
-    get_previous_player(GameState,Player),
+    get_game_previous_player(GameState,Player),
     check_for_win(GameState,Player).
 
 /**
