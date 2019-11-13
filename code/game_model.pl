@@ -4,6 +4,33 @@ generate_initial_game_state(Width, Height, P1Type, P2Type, [OctagonBoard, Square
     generate_octagon_board(Width, Height, OctagonBoard),
     generate_square_board(Width, Height, SquareBoard).
 
+
+board_get_element_at(Board, X-Y, Element) :-
+    nth0(Y, Board, Row),
+    nth0(X, Row, Element).
+
+
+board_insert_element_at(Board, X-Y, Element, NewBoard) :-
+    nth0(Y, Board, Row),
+    insert_element_at(Row, X, Element, NewRow),
+    insert_element_at(Board, Y, NewRow, NewBoard).
+
+insert_element_at(Row, X, Element, NewRow) :-
+    insert_element_at_aux(Row, X, Element, NewRow, 0).
+
+insert_element_at_aux([_HRow | TRow], X, Element, [Element | NewRow], XCount) :-
+    X == XCount,
+    NextXCount is XCount + 1,
+    insert_element_at_aux(TRow, X, Element, NewRow, NextXCount).
+
+insert_element_at_aux([HRow | TRow], X, Element, [HRow | NewRow], XCount) :-
+    X \== XCount,
+    NextXCount is XCount + 1,
+    insert_element_at_aux(TRow, X, Element, NewRow, NextXCount).
+
+insert_element_at_aux([], _, _, [], _).
+
+
 get_game_attributes(GameState, OctagonBoard, SquareBoard, Height, Width, P1Type, P2Type, CurrentPlayer, Cut) :-
     GameState = [OctagonBoard, SquareBoard, Height, Width, P1Type, P2Type, CurrentPlayer, Cut | []].
 

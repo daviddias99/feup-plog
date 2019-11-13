@@ -23,34 +23,18 @@
 
 gameover(GameState,Player) :- 
     get_game_previous_player(GameState,Player),
-    check_for_win(GameState,Player).
+    check_for_win(GameState, Player).
 
 /**
 *   check_for_win(+Gamestate, +Player)   
 *   
 *   Given a game state, check_for_win checks if Player won the game
 */
-check_for_win(GameState,Player) :-
+check_for_win([OctagonBoard,SquareBoard,Height,Width | _] ,Player) :-
 
-    % First condition for winning is if there is a path unitting both colored edges of a player
-    test_for_path(GameState,Player).
-    % get_other_player(Player,Opponent),
+    remove_cuttable_squares(OctagonBoard, SquareBoard, Player, NewSquareBoard),
 
-    % Second condition for winning is that there is no possible way for the oponnent to destroy said path
-    % Find all moves (PMove) possible by the Opponent such that there is a cut and that causes Player to not have any
-    % available paths. If there are no such moves, Player won.
-    % findall(PMove, (move(Opponent,PMove,GameState,NextGameState),\+test_for_path(NextGameState,Player)),Result),
-    % Result = [].
-
-
-/**
-*   test_for_path(+Gamestate,+Player)
-*
-*   Test if, given the Gamestate, that Player as a path (octagons and/or squares) that connects his two board edges
-*/
-test_for_path([OctagonBoard,SquareBoard,Height,Width | _],Player):-
-
-    orient_board(OctagonBoard,SquareBoard,Player,OrientedOctagonBoard,OrientedSquareBoard),
+    orient_board(OctagonBoard, NewSquareBoard,Player,OrientedOctagonBoard,OrientedSquareBoard),
 
     % Get the octagons where the path may start(there are connected with the Player's top board edge). This function is meant to optimize the 
     % process as there is no need to build the graph(which is an operation that is computationally expensive) if there is no starting pice to begin with.
@@ -63,6 +47,8 @@ test_for_path([OctagonBoard,SquareBoard,Height,Width | _],Player):-
     % Check if the opposing board edge is connected to the starting one via a path
     gen_last_row_ids(Width,Height,LastRowIDs),!,
     reachable_from_starters(Graph,Starters,LastRowIDs).
+
+
 
 /**
 *   orient_board(+OctagonBoard,+SquareBoard,Player,-OrientedOctagonBoard,-OrientedSquareBoard)
@@ -140,3 +126,81 @@ fetch_starters_iter([H|T],Player,Result,Acc,N) :-
         H =\= Player, 
         N1 is N + 1, 
         fetch_starters_iter(T,Player,Result,Acc,N1).
+
+
+remove_cuttable_squares(OctagonBoard, [Row | SquareBoard], Player, [Row | NewSquareBoard]) :-
+    remove_cuttable_squares_aux(OctagonBoard, SquareBoard, Player, 1, NewSquareBoard).
+
+remove_cuttable_squares_aux(_OctagonBoard, [Row | []], _Y, _Player, [Row]).
+
+remove_cuttable_squares_aux(OctagonBoard, [Row | SquareBoard], Y, Player, [NewRow | NewSquareBoard]) :-
+    remove_cuttable_squares_row(OctagonBoard, Row, Y, Player, NewRow),
+    YNext is Y + 1, 
+    remove_cuttable_squares_aux(OctagonBoard, SquareBoard, YNext, Player, NewSquareBoard).
+
+remove_cuttable_squares_row(OctagonBoard, [Element | Row], Y, Player, [Element | NewRow]) :-
+    remove_cuttable_squares_row_aux(OctagonBoard, Row, 1, Y, Player, NewRow).
+
+remove_cuttable_squares_row_aux(_OctagonBoard, [Element | []], _X, _Y, _Player, [Element]).
+
+% Caso element seja cuttable
+remove_cuttable_squares_row_aux(OctagonBoard, [Player | Row], X, Y, Player, [0 | NewRow]) :-
+    is_cuttable(OctagonBoard, Player, X, Y),
+    write(X), write('-'), write(Y), write(' is cuttable'), nl,
+    XNext is X + 1,
+    write(X), write('-'), write(Y), nl,
+    remove_cuttable_squares_row_aux(OctagonBoard, Row, XNext, Y, Player, NewRow).
+
+% Caso element n seja cuttable
+remove_cuttable_squares_row_aux(OctagonBoard, [Player | Row], X, Y, Player, [Player | NewRow]) :-
+    XNext is X + 1,
+    write(X), write('-'), write(Y), nl,
+    remove_cuttable_squares_row_aux(OctagonBoard, Row, XNext, Y, Player, NewRow).
+
+% Caso element n seja do jogador a testar
+remove_cuttable_squares_row_aux(OctagonBoard, [Element | Row], X, Y, Player, [Element | NewRow]) :-
+    XNext is X + 1,
+    write(X), write('-'), write(Y), nl,
+    remove_cuttable_squares_row_aux(OctagonBoard, Row, XNext, Y, Player, NewRow).
+
+%%%%%
+
+is_cuttable(OctagonBoard, _Player, X, Y) :-
+    board_get_element_at(OctagonBoard, X-Y, 0),
+    OtherX is X - 1,
+    OtherY is Y - 1,
+    board_get_element_at(OctagonBoard, OtherX-OtherY, 0).
+
+is_cuttable(OctagonBoard, _Player, X, Y) :-
+    OtherX is X - 1,
+    OtherY is Y - 1,
+    board_get_element_at(OctagonBoard, X-OtherY, 0),
+    board_get_element_at(OctagonBoard, OtherX-Y, 0).
+
+is_cuttable(OctagonBoard, Player, X, Y) :-
+    get_other_player(Player, OtherPlayer),
+    board_get_element_at(OctagonBoard, X-Y, OtherPlayer),
+    OtherX is X - 1,
+    OtherY is Y - 1,
+    board_get_element_at(OctagonBoard, OtherX-OtherY, 0).
+
+is_cuttable(OctagonBoard, Player, X, Y) :-
+    get_other_player(Player, OtherPlayer),
+    OtherX is X - 1,
+    OtherY is Y - 1,
+    board_get_element_at(OctagonBoard, X-OtherY, OtherPlayer),
+    board_get_element_at(OctagonBoard, OtherX-Y, 0).
+
+is_cuttable(OctagonBoard, Player, X, Y) :-
+    get_other_player(Player, OtherPlayer),
+    board_get_element_at(OctagonBoard, X-Y, 0),
+    OtherX is X - 1,
+    OtherY is Y - 1,
+    board_get_element_at(OctagonBoard, OtherX-OtherY, OtherPlayer).
+
+is_cuttable(OctagonBoard, Player, X, Y) :-
+    get_other_player(Player, OtherPlayer),
+    OtherX is X - 1,
+    OtherY is Y - 1,
+    board_get_element_at(OctagonBoard, X-OtherY, 0),
+    board_get_element_at(OctagonBoard, OtherX-Y, OtherPlayer).

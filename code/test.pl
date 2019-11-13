@@ -13,8 +13,6 @@ remove_cuttable_squares_row(OctagonBoard, [Element | Row], Y, Player, [Element |
 
 remove_cuttable_squares_row_aux(_OctagonBoard, [Element | []], _X, _Y, _Player, [Element]).
 
-
-
 % Caso element seja cuttable
 remove_cuttable_squares_row_aux(OctagonBoard, [Player | Row], X, Y, Player, [0 | NewRow]) :-
     is_cuttable(OctagonBoard, Player, X, Y),
@@ -76,29 +74,3 @@ is_cuttable(OctagonBoard, Player, X, Y) :-
     OtherY is Y - 1,
     board_get_element_at(OctagonBoard, X-OtherY, 0),
     board_get_element_at(OctagonBoard, OtherX-Y, OtherPlayer).
-
-%%%%%%
-
-board_get_element_at(Board, X-Y, Element) :-
-    nth0(Y, Board, Row),
-    nth0(X, Row, Element).
-
-get_other_player(1,2).
-get_other_player(2,1).
-
-init([
-    [1, 2, 2, 1],
-    [2, 1, 0, 1],
-    [1, 2, 1, 0],
-    [0, 1, 2, 2]
-], [
-    [0, 1, 1, 1, 0],
-    [2, 1, 0, 0, 2],
-    [2, 1, 1, 1, 2],
-    [2, 1, 2, 0, 2],
-    [0, 1, 1, 1, 0]
-]).
-
-:- [display].
-
-test :- init(OB, SB), display_board(OB, SB, 0, 4, 4), nl, nl, remove_cuttable_squares(OB, SB, 1, NSB), display_board(OB, NSB, 0, 4, 4).

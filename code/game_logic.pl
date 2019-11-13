@@ -35,26 +35,6 @@ update_next_player(1, 1-1, 2, 1-0, NumCuts) :- NumCuts == 0.
 update_next_player(2, 1-0, 1, 1-0, NumCuts) :- NumCuts == 0.
 update_next_player(1, 1-0, 2, 1-0, NumCuts) :- NumCuts == 0.
 
-board_insert_element_at(Board, X-Y, Element, NewBoard) :-
-    nth0(Y, Board, Row),
-    insert_element_at(Row, X, Element, NewRow),
-    insert_element_at(Board, Y, NewRow, NewBoard).
-
-insert_element_at(Row, X, Element, NewRow) :-
-    insert_element_at_aux(Row, X, Element, NewRow, 0).
-
-insert_element_at_aux([_HRow | TRow], X, Element, [Element | NewRow], XCount) :-
-    X == XCount,
-    NextXCount is XCount + 1,
-    insert_element_at_aux(TRow, X, Element, NewRow, NextXCount).
-
-insert_element_at_aux([HRow | TRow], X, Element, [HRow | NewRow], XCount) :-
-    X \== XCount,
-    NextXCount is XCount + 1,
-    insert_element_at_aux(TRow, X, Element, NewRow, NextXCount).
-
-insert_element_at_aux([], _, _, [], _).
-
 get_diagonals_pos(0-0, _, _, [1-1]).
 get_diagonals_pos(X-0, _, Width, [CoordX-1]) :-
     X =:= Width - 1,
@@ -121,10 +101,6 @@ get_diagonals_pos(X-Y, _, _, Res) :-
         XLeft-YBottom,
         XRight-YBottom
     ].
-
-board_get_element_at(Board, X-Y, Element) :-
-    nth0(Y, Board, Row),
-    nth0(X, Row, Element).
 
 update_squares(Player, X-Y, OctagonBoard, SquareBoard, NewSquareBoard, Height, Width, NumCuts) :-
     get_diagonals_pos(X-Y, Height, Width, DiagonalsPos),
