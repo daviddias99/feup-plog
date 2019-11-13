@@ -65,4 +65,10 @@ choose_move(GameState, 1, Move) :-
     write('CHOSEN MOVE: '), write(Move), nl,
     press_enter_to_continue.
 
+choose_move(GameState, 2, Move) :-
+    greedy_move(GameState, Move),
+    write('CHOSEN MOVE: '), write(Move), nl,
+    press_enter_to_continue.
+
+
 
