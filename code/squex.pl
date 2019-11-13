@@ -41,13 +41,16 @@ get_players_type(4, P1Type, P2Type) :-
     input_bot_level(P1Type, 1),
     input_bot_level(P2Type, 2).
 
-game_loop(NewGameState) :-
+continue_game(NewGameState) :-
     gameover(NewGameState, Player), !, display_gameover(NewGameState, Player).
+
+continue_game(NewGameState) :-
+    game_loop(NewGameState).
 
 game_loop(GameState) :-
     display_game(GameState), 
     repeat, get_move(GameState, Move), move(Move, GameState, NewGameState), !,
-    game_loop(NewGameState).
+    continue_game(NewGameState).
 
 get_move(GameState, Move) :-
     get_game_current_player_type(GameState, Type),

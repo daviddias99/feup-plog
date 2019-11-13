@@ -19,7 +19,7 @@ valid_moves_aux([Row | OctagonBoard], NumRow, Moves, MovesAcc) :-
 validate_move(OctagonBoard, Move) :-
     board_get_element_at(OctagonBoard, Move, 0).
 
-% move(+Player,+Move, +Board, -NewBoard).
+% move(+Move, +Board, -NewBoard).
 move(Move, [OctagonBoard, SquareBoard, Height, Width, P1Type, P2Type, Player, CutInfo | []], [NewOctagonBoard, NewSquareBoard, Height, Width, P1Type, P2Type, NewPlayer, NewCutInfo | []]) :-
     validate_move(OctagonBoard, Move),
     board_insert_element_at(OctagonBoard, Move, Player, NewOctagonBoard),
