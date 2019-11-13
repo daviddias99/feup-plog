@@ -1,6 +1,6 @@
 :- use_module(library(clpfd)).
 :- [graph].
-:- [game_model].
+:- ensure_loaded('game_model.pl').
 
 %
 % gameover(+Board,-Player) - checks if the game is over, if so returns the player that won
@@ -13,8 +13,7 @@
 %------------------------------------------ 1,1,1
 %------------------------------------------ 2,1,0
 gameover(GameState,Player) :- 
-
-    get_previous_player(GameState,Player),
+    get_game_previous_player(GameState,Player),
     check_for_win(GameState,Player).
 
 check_for_win(GameState,Player) :-

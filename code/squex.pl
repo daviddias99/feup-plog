@@ -41,8 +41,8 @@ get_players_type(4, P1Type, P2Type) :-
     input_bot_level(P1Type, 1),
     input_bot_level(P2Type, 2).
 
-%game_loop(NewGameState) :-
-    % gameover(NewGameState, Player), !, display_gameover(NewGameState, Player).
+game_loop(NewGameState) :-
+    gameover(NewGameState, Player), !, display_gameover(NewGameState, Player).
 
 game_loop(GameState) :-
     display_game(GameState), 
