@@ -31,13 +31,13 @@ build_edges(OctagonBoard,[_|RemainingSquareBoard],Height,Width,Player,GraphEdges
     % Duplicate all the edges (reversing the duplicates orientation) in order to make the graph undirected
     make_undirected(UnidirectionalGraphEdges,GraphEdges).
 
-build_edges_iter([_|[]],_,GraphEdges,GraphEdges,_,_).
+build_edges_iter([_|[]],_,_,_,GraphEdges,GraphEdges,_,_).
 
 % Build_edges_iter processes the octagon board from top to bottom (row 0 to height - 2).
 build_edges_iter([CurrentOctRow,NextOctRow|RemainingOctagonBoard],[NextSqRow|RemainingSquareBoard],Height,Width,GraphEdges,Edges,Player,OctRowY):-
 
     % Get the paths from the current row
-    add_paths_from_row(CurrentOctRow,NextOctRow,NextSqRow,NewEdges,Player,OctRowY),
+    add_paths_from_row(CurrentOctRow,NextOctRow,NextSqRow,Height,Width,Player,OctRowY,NewEdges),
 
     % Accumulate the calculated Edges
     append(Edges,NewEdges,NextEdges),
@@ -52,9 +52,9 @@ build_edges_iter([CurrentOctRow,NextOctRow|RemainingOctagonBoard],[NextSqRow|Rem
 *   Add the edges that go from octagons in CurrentOctRow to octagons in the same and in NextOctRow, taking into account connections between octagons of CurrentOctRow
 *   and the row below that are formed through squares.
 */
-add_paths_from_row(CurrentOctRow,NextOctRow,NextSqRow,Width,Player,OctRowY,GraphEdges) :- add_paths_from_row_iter(CurrentOctRow,NextOctRow,NextSqRow,Width,GraphEdges,Player,[],0,OctRowY).
+add_paths_from_row(CurrentOctRow,NextOctRow,NextSqRow,Height,Width,Player,OctRowY,GraphEdges) :- add_paths_from_row_iter(CurrentOctRow,NextOctRow,NextSqRow,Height,Width,GraphEdges,Player,[],0,OctRowY).
 
-add_paths_from_row_iter(_,_,_,Height,_,GraphEdges,_,GraphEdges,_,Height).
+add_paths_from_row_iter(_,_,_,_,Width,GraphEdges,_,GraphEdges,Width,_).
 
 add_paths_from_row_iter(CurrentOctRow,NextOctRow,NextSqRow,Height,Width,GraphEdges,Player,Edges,XCoord,YCoord) :- 
     nth0(XCoord,CurrentOctRow,Cell),

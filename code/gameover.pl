@@ -20,6 +20,7 @@
 *   Checks if the game is over, if so returns the player that won.
 */
 
+
 gameover(GameState,Player) :- 
     get_game_previous_player(GameState,Player),
     check_for_win(GameState,Player).
@@ -32,14 +33,14 @@ gameover(GameState,Player) :-
 check_for_win(GameState,Player) :-
 
     % First condition for winning is if there is a path unitting both colored edges of a player
-    test_for_path(GameState,Player),
-    get_other_player(Player,Opponent),
+    test_for_path(GameState,Player).
+    % get_other_player(Player,Opponent),
 
     % Second condition for winning is that there is no possible way for the oponnent to destroy said path
     % Find all moves (PMove) possible by the Opponent such that there is a cut and that causes Player to not have any
     % available paths. If there are no such moves, Player won.
-    findall(PMove, (move(Opponent,PMove,GameState,NextGameState,NumCuts),NumCuts =\= 0,\+test_for_path(NextGameState,Player)),Result),
-    Result = [].
+    % findall(PMove, (move(Opponent,PMove,GameState,NextGameState),\+test_for_path(NextGameState,Player)),Result),
+    % Result = [].
 
 
 /**
@@ -48,8 +49,8 @@ check_for_win(GameState,Player) :-
 *   Test if, given the Gamestate, that Player as a path (octagons and/or squares) that connects his two board edges
 */
 test_for_path([OctagonBoard,SquareBoard,Height,Width | _],Player):-
-    Player =:= 1,
-    orient_board(OctagonBoard,SquareBoard,OrientedOctagonBoard,OrientedSquareBoard),
+
+    orient_board(OctagonBoard,SquareBoard,Player,OrientedOctagonBoard,OrientedSquareBoard),
 
     % Get the octagons where the path may start(there are connected with the Player's top board edge). This function is meant to optimize the 
     % process as there is no need to build the graph(which is an operation that is computationally expensive) if there is no starting pice to begin with.
@@ -60,7 +61,7 @@ test_for_path([OctagonBoard,SquareBoard,Height,Width | _],Player):-
     build_graph([OrientedOctagonBoard,OrientedSquareBoard,Height,Width],Player,Graph),
 
     % Check if the opposing board edge is connected to the starting one via a path
-    gen_last_row_ids(Width,Height,LastRowIDs),
+    gen_last_row_ids(Width,Height,LastRowIDs),!,
     reachable_from_starters(Graph,Starters,LastRowIDs).
 
 /**
@@ -80,14 +81,17 @@ orient_board(OctagonBoard,SquareBoard,2, NewOctagonBoard, NewSquareBoard) :-
 *
 *   This predicate succeeds if, following Graph, there is a path that connects an octagon from Starters with an Octagon from Destinations
 */
+
+reachable_from_starters(_,[],_) :- fail.
+
 reachable_from_starters(Graph,[H|_],Destinations) :-
     reachable(H,Graph,Result),
     contains_any(Result,Destinations).
 
 reachable_from_starters(Graph,[H|T],Destinations) :-
     reachable(H,Graph,Result),
-    \+contains_end(Result,Destinations),
-    reachable_from_starters(Graph,T).
+    \+contains_any(Result,Destinations),
+    reachable_from_starters(Graph,T,Destinations).
 
 /**
 *   contains_any(+X,+Y)
@@ -103,16 +107,17 @@ contains_any([H|T],L) :- \+intersection([H|T],L,[]).
 *
 *   Fills IDList with the ids of the cells of the last row of the Board with size BoardWidth/BoardHeight
 */
-gen_last_row_ids(Width,Height,IDList) :-gen_last_row_ids_iter(Width,Height,IDList,[]).
+gen_last_row_ids(Width,Height,IDList) :-gen_last_row_ids_iter(Width,Height,IDList,[],0).
 
-gen_last_row_ids_iter(_,_,Result,Result).
+gen_last_row_ids_iter(Width,_,Result,Result,Width).
 
-gen_last_row_ids_iter(Width,Height,Result,Acc) :-
+gen_last_row_ids_iter(Width,Height,Result,Acc,Cnt) :-
 
     length(Acc,Size),
     Element is Width * (Height - 1) + Size,
     append(Acc,[Element],Acc1),
-    gen_last_row_ids_iter(Width,Height,Result,Acc1).
+    Cnt1 is Cnt + 1,
+    gen_last_row_ids_iter(Width,Height,Result,Acc1,Cnt1).
 
 
 /**
