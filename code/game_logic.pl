@@ -1,20 +1,8 @@
 :- ensure_loaded('game_model.pl').
 
-valid_moves_row(_NumRow, [], _Moves).
-valid_moves_row(NumRow, Row, Moves) :-
-    findall(NumCol-NumRow, nth0(NumCol, Row, 0), Moves).
-
 valid_moves(GameState, Moves) :-
     get_game_octagon_board(GameState, OctagonBoard),
-    valid_moves_aux(OctagonBoard, 0, Moves, []).
-
-valid_moves_aux([], _NumRow, Moves, Moves).
-
-valid_moves_aux([Row | OctagonBoard], NumRow, Moves, MovesAcc) :-
-    valid_moves_row(NumRow, Row, MovesRow),
-    append(MovesAcc, MovesRow, NewMovesAcc),
-    NewNumRow is NumRow + 1,
-    valid_moves_aux(OctagonBoard, NewNumRow, Moves, NewMovesAcc).
+    findall(Move, validate_move(OctagonBoard, Move), Moves).
 
 validate_move(OctagonBoard, Move) :-
     board_get_element_at(OctagonBoard, Move, 0).
