@@ -9,8 +9,7 @@ greedy_move(GameState, _) :-
     valid_moves(GameState,ListOfMoves),
     setof(Value-Move, (member(Move, ListOfMoves),move(Move, GameState, NewGameState), value(NewGameState, Value)), Result).
 
-
 value(GameState, Value) :-
-
-    GameState = [OctagonBoard,SquareBoard]
-    build_graph(GameState,)
+    GameState = [OctagonBoard,SquareBoard, Height, Width, _, _, Player |_],
+    build_graph([OctagonBoard, SquareBoard, Height, Width], Player, Graph),
+    
