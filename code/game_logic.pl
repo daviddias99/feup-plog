@@ -41,7 +41,7 @@ get_diagonals_pos(X-Y, Height, Width, [CoordX-CoordY]) :-
 
 get_diagonals_pos(X-Y, _, Width, Res) :-
     X =:= Width - 1,
-    XLeft is X - 2,
+    XLeft is X - 1,
     YUp is Y - 1,
     YBottom is Y + 1,
     Res = [
@@ -51,7 +51,7 @@ get_diagonals_pos(X-Y, _, Width, Res) :-
 
 get_diagonals_pos(X-Y, Height, _, Res) :-
     Y =:= Height - 1,
-    YTop is Y - 2,
+    YTop is Y - 1,
     XLeft is X - 1,
     XRight is X + 1,
     Res = [
