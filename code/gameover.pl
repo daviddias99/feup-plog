@@ -8,11 +8,13 @@
 % -  gameover(+Board,-Player)
 % -  test_for_path(+Gamestate,+Player)
 % -  orient_board(+OctagonBoard,+SquareBoard,Player,-OrientedOctagonBoard,-OrientedSquareBoard)
-% -  reachable_from_starters(+Graph,+Starters,+Destinations)
+% -  reachable_from_list(+Graph,+Starters,+Destinations)
 % -  contains_any(+X,+Y)
-% -  gen_last_row_ids(+BoardWidth,+BoardHeight,-IDList)
+% -  gen_row_ids(+BoardWidth,+BoardHeight,-IDList)
 % -  get_valid_starters(+OctagonBoard,+Player,-Starters)
 
+
+init_b([[[0,1,2,2,0,0,0,0],[0,1,0,2,0,0,0,2],[0,1,2,0,0,0,0,0],[0,1,0,0,0,0,0,0],[0,1,0,0,0,0,0,0],[0,1,2,0,0,0,0,0],[0,1,2,0,0,0,0,0],[0,1,0,0,0,0,0,0]],[[0,1,1,1,1,1,1,1,0],[2,0,0,2,0,0,0,0,2],[2,0,0,2,0,0,0,0,2],[2,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,0,2],[0,1,1,1,1,1,1,1,0]],8,8,'P','P',2,1-0]).
 
 /**
 *   gameover(+Board,-Player) 
@@ -39,14 +41,16 @@ check_for_win([OctagonBoard,SquareBoard,Height,Width | _] ,Player) :-
     % Get the octagons where the path may start(there are connected with the Player's top board edge). This function is meant to optimize the 
     % process as there is no need to build the graph(which is an operation that is computationally expensive) if there is no starting pice to begin with.
 
-    get_valid_starters(OrientedOctagonBoard,Player,Starters),
+    get_valid_starters(OrientedOctagonBoard,Player,0,Width,Starters),
 
     % Build the player-path graph
     build_graph([OrientedOctagonBoard,OrientedSquareBoard,Height,Width],Player,Graph),
 
     % Check if the opposing board edge is connected to the starting one via a path
-    gen_last_row_ids(Width,Height,LastRowIDs),!,
-    reachable_from_starters(Graph,Starters,LastRowIDs).
+
+    LastRowID is Height -1,
+    gen_row_ids(Width,LastRowID,LastRowIDs),!,
+    reachable_from_list(Graph,Starters,LastRowIDs).
 
 
 
@@ -63,21 +67,21 @@ orient_board(OctagonBoard,SquareBoard,2, NewOctagonBoard, NewSquareBoard) :-
     transpose(SquareBoard,NewSquareBoard).
 
 /**
-*   reachable_from_starters(+Graph,+Starters,+Destinations)
+*   reachable_from_list(+Graph,+List,+Destinations)
 *
-*   This predicate succeeds if, following Graph, there is a path that connects an octagon from Starters with an Octagon from Destinations
+*   This predicate succeeds if, following Graph, there is a path that connects an octagon from List with an Octagon from Destinations
 */
 
-reachable_from_starters(_,[],_) :- fail.
+reachable_from_list(_,[],_) :- fail.
 
-reachable_from_starters(Graph,[H|_],Destinations) :-
+reachable_from_list(Graph,[H|_],Destinations) :-
     reachable(H,Graph,Result),
     contains_any(Result,Destinations).
 
-reachable_from_starters(Graph,[H|T],Destinations) :-
+reachable_from_list(Graph,[H|T],Destinations) :-
     reachable(H,Graph,Result),
     \+contains_any(Result,Destinations),
-    reachable_from_starters(Graph,T,Destinations).
+    reachable_from_list(Graph,T,Destinations).
 
 /**
 *   contains_any(+X,+Y)
@@ -89,43 +93,44 @@ contains_any([H|T],L) :- \+intersection([H|T],L,[]).
 
 
 /**
-*   gen_last_row_ids(+BoardWidth,+BoardHeight,-IDList)
+*   gen_row_ids(+BoardWidth,+RowID,-IDList)
 *
-*   Fills IDList with the ids of the cells of the last row of the Board with size BoardWidth/BoardHeight
+*   Fills IDList with the ids of the cells of the row number RowID of the Board with size BoardWidth/BoardHeight
 */
-gen_last_row_ids(Width,Height,IDList) :-gen_last_row_ids_iter(Width,Height,IDList,[],0).
+gen_row_ids(Width,RowID,IDList) :-gen_row_ids_iter(Width,RowID,IDList,[],0).
 
-gen_last_row_ids_iter(Width,_,Result,Result,Width).
+gen_row_ids_iter(Width,_,Result,Result,Width):-!.
 
-gen_last_row_ids_iter(Width,Height,Result,Acc,Cnt) :-
+gen_row_ids_iter(Width,RowID,Result,Acc,Cnt) :-
 
     length(Acc,Size),
-    Element is Width * (Height - 1) + Size,
+    Element is Width * RowID + Size,
     append(Acc,[Element],Acc1),
     Cnt1 is Cnt + 1,
-    gen_last_row_ids_iter(Width,Height,Result,Acc1,Cnt1).
+    gen_row_ids_iter(Width,RowID,Result,Acc1,Cnt1).
 
 
 /**
-*   get_valid_starters(+OctagonBoard,+Player,-Starters)
+*   get_valid_starters(+OctagonBoard,+Player,-Starters,-Index)
 *
-*   Fill Starters with the ID's of the pieces of the first row of OctagonBoard that belong to Player
+*   Fill Starters with the ID's of the pieces of the row Index of OctagonBoard that belong to Player
 */
-get_valid_starters([H|_],Player,Starters) :- member(Player,H), fetch_starters(H,Player,Starters).
+get_valid_starters(OctagonBoard,Player,Index,Width,Starters) :- nth0(Index,OctagonBoard,H), member(Player,H), fetch_starters(H,Index,Width,Player,Starters).
 
-fetch_starters(Row, Player, Result) :- fetch_starters_iter(Row,Player,Result,[],0).
+fetch_starters(Row,Index,Width, Player, Result) :- fetch_starters_iter(Row,Index,Width,Player,Result,[],0).
 
-fetch_starters_iter([],_,Result,Result,_).
-fetch_starters_iter([H|T],Player,Result,Acc,N) :-  
+fetch_starters_iter([],_,_,_,Result,Result,_).
+fetch_starters_iter([H|T],Index,Width,Player,Result,Acc,N) :-  
         H =:= Player, 
-        append(Acc,[N],Acc1),
+        ID is Index*Width + N,
+        append(Acc,[ID],Acc1),
         N1 is N + 1, 
-        fetch_starters_iter(T,Player,Result,Acc1,N1).
+        fetch_starters_iter(T,Index,Width,Player,Result,Acc1,N1).
 
-fetch_starters_iter([H|T],Player,Result,Acc,N) :-  
+fetch_starters_iter([H|T],Index,Width,Player,Result,Acc,N) :-  
         H =\= Player, 
         N1 is N + 1, 
-        fetch_starters_iter(T,Player,Result,Acc,N1).
+        fetch_starters_iter(T,Index,Width,Player,Result,Acc,N1).
 
 
 remove_cuttable_squares(OctagonBoard, [Row | SquareBoard], Player, [Row | NewSquareBoard]) :-
@@ -146,21 +151,21 @@ remove_cuttable_squares_row_aux(_OctagonBoard, [Element | []], _X, _Y, _Player, 
 % Caso element seja cuttable
 remove_cuttable_squares_row_aux(OctagonBoard, [Player | Row], X, Y, Player, [0 | NewRow]) :-
     is_cuttable(OctagonBoard, Player, X, Y),
-    write(X), write('-'), write(Y), write(' is cuttable'), nl,
+    % write(X), write('-'), write(Y), write(' is cuttable'), nl,
     XNext is X + 1,
-    write(X), write('-'), write(Y), nl,
+    % write(X), write('-'), write(Y), nl,
     remove_cuttable_squares_row_aux(OctagonBoard, Row, XNext, Y, Player, NewRow).
 
 % Caso element n seja cuttable
 remove_cuttable_squares_row_aux(OctagonBoard, [Player | Row], X, Y, Player, [Player | NewRow]) :-
     XNext is X + 1,
-    write(X), write('-'), write(Y), nl,
+    % write(X), write('-'), write(Y), nl,
     remove_cuttable_squares_row_aux(OctagonBoard, Row, XNext, Y, Player, NewRow).
 
 % Caso element n seja do jogador a testar
 remove_cuttable_squares_row_aux(OctagonBoard, [Element | Row], X, Y, Player, [Element | NewRow]) :-
     XNext is X + 1,
-    write(X), write('-'), write(Y), nl,
+    % write(X), write('-'), write(Y), nl,
     remove_cuttable_squares_row_aux(OctagonBoard, Row, XNext, Y, Player, NewRow).
 
 %%%%%

@@ -14,7 +14,7 @@ build_graph([OctagonBoard,SquareBoard,Height,Width],Player,Graph) :-
 
     % Build the edges of the graph
     build_edges(OctagonBoard,SquareBoard,Height,Width,Player,GraphEdges), 
-    
+
     % Build the actual graph (from ugraphs library)
     vertices_edges_to_ugraph([],GraphEdges,Graph).
 
@@ -69,6 +69,7 @@ add_paths_from_row_iter(CurrentOctRow,NextOctRow,NextSqRow,Height,Width,GraphEdg
     nth0(XCoord,CurrentOctRow,Cell),
     Cell =:= Player,
     NewXCoord is XCoord +1,
+    Coord is Width * YCoord + XCoord,
 
     % Check all the possible directions for adjacent octagons with the same color. Below L corresponds to the octagon-cell of the next octagon row that 
     % is to the left, diagonally, of the current Cell. The same goes for below R and below C, that represent the same but for the right diagonal cell and
@@ -85,8 +86,9 @@ add_paths_from_row_iter(CurrentOctRow,NextOctRow,NextSqRow,Height,Width,GraphEdg
     append(Edges2,EdgeC,Edges3),
     append(Edges3,EdgeD,Edges4),
     append(Edges4,EdgeE,Edges5),
+    append(Edges5,[Coord-Coord],Edges6),
 
-    add_paths_from_row_iter(CurrentOctRow,NextOctRow,NextSqRow,Height,Width,GraphEdges,Player,Edges5,NewXCoord,YCoord). 
+    add_paths_from_row_iter(CurrentOctRow,NextOctRow,NextSqRow,Height,Width,GraphEdges,Player,Edges6,NewXCoord,YCoord). 
 
 % In the first cell of a row there is no left level child
 get_child_from_levelL(_,_,_,[],0,_).
