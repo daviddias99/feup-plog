@@ -16,7 +16,12 @@
 
 
 
-
+/**
+*   display_game(+GameState)
+*
+*   Displays information about the current gamestate. Displays the board (with coordinates) and whose plays turn it is to play. It also displays 
+*   information about cuts
+*/
 display_game([OctagonBoard, SquareBoard, Height, Width, _, _, Player, CutHappened |[]]) :-
     display_cut_message(CutHappened), nl,
     display_horizontal_coordinates(a, Width), nl, 
@@ -27,6 +32,11 @@ display_cut_message(2-1) :-
     ansi_format([bold], 'A cut has happened. Next player gets 2 consecutive turns.', [world]), !.
 display_cut_message(_).
 
+/**
+*   display_gameover(+GameState)
+*
+*   Displays the message "PLAYER X WON!" where X is the number of the player who won
+*/
 display_gameover([OctagonBoard, SquareBoard, Height, Width | _], Player) :-
     display_horizontal_coordinates(a, Width), nl, 
     display_board(OctagonBoard, SquareBoard, 0, Height, Width), nl, nl,
@@ -34,6 +44,12 @@ display_gameover([OctagonBoard, SquareBoard, Height, Width | _], Player) :-
 
 write_player(1) :- ansi_format([bold, fg(blue)], 1, [world]).
 write_player(2) :- ansi_format([bold, fg(red)], 2, [world]).
+
+/**
+*   display_board(+OctagonBoard, +SquareBoard, +FirstVerticalCoord, +BoardHeight, +BoardWidth)
+*
+*   Displays the game board. Also displays vertical coordinates.
+*/
 
 display_board([], [], _, _, _).
 display_board([], [SquareRow | SquareBoard], Y, Height, Width) :- 
@@ -77,10 +93,6 @@ display_square_row([H | T]) :- display_square_piece(H), display_octagon_ver_sepa
 
 % auxiliary functions to display borders of the cells
 
-% display_upper_octagon_cell(0) :- ansi_format(bold, '  \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 ', [world]).
-% display_upper_octagon_cell(8) :- ansi_format(bold, '        \u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571 ', [world]).
-% display_upper_octagon_cell(_) :- ansi_format(bold, '\u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571     \u2572 \u2571', [world]).
-
 display_upper_octagon_cell(_, _, Width, X) :- X > Width.
 
 display_upper_octagon_cell(0, Height, Width, 0) :-
@@ -101,11 +113,6 @@ display_upper_octagon_cell(Y, Height, Width, X) :-
     ansi_format(bold, '\u2572 \u2571     ', [world]),
     XNext is X + 1,
     display_upper_octagon_cell(Y, Height, Width, XNext).
-
-
-% display_lower_octagon_cell(0) :- ansi_format(bold, '        \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572', [world]).
-% display_lower_octagon_cell(8) :- ansi_format(bold, '  \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 ', [world]).
-% display_lower_octagon_cell(_) :- ansi_format(bold, '\u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572     \u2571 \u2572', [world]).
 
 display_lower_octagon_cell(0, Height, Width, 0) :-
     ansi_format(bold, '        ', [world]),
