@@ -4,135 +4,124 @@
 :- ensure_loaded('gameover.pl').
 :- ensure_loaded('display.pl').
 
-% init_game_state([[
-%              [0, 0, 0, 0, 0, 0, 2, 0],
-%              [0, 0, 0, 0, 2, 2, 0, 2],
-%              [1, 1, 1, 2, 0, 1, 2, 0],
-%              [0, 0, 0, 0, 0, 0, 0, 0],
-%              [0, 0, 0, 0, 0, 0, 0, 0],
-%              [0, 0, 0, 0, 0, 0, 0, 0],
-%              [0, 0, 0, 0, 0, 0, 0, 0],
-%              [0, 0, 0, 0, 0, 0, 0, 0]
-%             ],
-%             [
-%              [0, 1, 1, 1, 1, 1, 1, 1, 0],
-%              [2, 0, 0, 0, 0, 0, 2, 2, 2],
-%              [2, 0, 0, 0, 2, 2, 2, 2, 2],
-%              [2, 0, 0, 0, 0, 0, 0, 0, 2],
-%              [2, 0, 0, 0, 0, 0, 0, 0, 2],
-%              [2, 0, 0, 0, 0, 0, 0, 0, 2],
-%              [2, 0, 0, 0, 0, 0, 0, 0, 2],
-%              [2, 0, 0, 0, 0, 0, 0, 0, 2],
-%              [0, 1, 1, 1, 1, 1, 1, 1, 0]
-%             ],
-%             8,
-%             8,
-%             1,
-%             1,
-%             1,
-%             1-0 ]).
-
-init_game_state([[
-             [0, 0, 0, 0, 0, 0, 0, 0],
-             [0, 0, 0, 0, 0, 0, 0, 0],
-             [0, 0, 0, 0, 0, 0, 0, 0],
-             [0, 0, 0, 0, 0, 0, 0, 0],
-             [0, 0, 0, 0, 0, 0, 2, 0],
-             [1, 0, 0, 0, 0, 0, 0, 2],
-             [1, 2, 0, 0, 0, 0, 0, 0],
-             [0, 0, 2, 0, 0, 1, 0, 0]
-            ],
-            [
-             [0, 1, 1, 1, 1, 1, 1, 1, 0],
-             [2, 0, 0, 0, 0, 0, 0, 0, 2],
-             [2, 0, 0, 0, 0, 0, 0, 0, 2],
-             [2, 0, 0, 0, 0, 0, 0, 0, 2],
-             [2, 0, 0, 0, 0, 0, 0, 0, 2],
-             [2, 0, 0, 0, 0, 0, 0, 2, 2],
-             [2, 0, 0, 0, 0, 0, 0, 0, 2],
-             [2, 0, 2, 0, 0, 0, 0, 0, 2],
-             [0, 1, 1, 1, 1, 1, 1, 1, 0]
-            ],
-            8,
-            8,
-            1,
-            1,
-            2,
-            1-0 ]).
+/**
+*   Level-1 Bot - This bot chooses any of the possible moves given a gamestate
+*/
 
 
-
+/**
+*   random_move(+GameState,-Move)
+*
+*   Choose a random valid Move given GameState
+*/
 random_move(GameState, Move) :-
     valid_moves(GameState, ListOfMoves),
     random_member(Move, ListOfMoves).
 
 
-% Level-2 Bot
+% Level-2 Bot - This bot chooses the "best" possible move at a given gamestate
 
+/**
+*   greedy_move(+GameState,-BestMove)
+*
+*   Choose the "best" possible move given a game-state. (The means by which a "best" move is selected are described ahead).
+*/
 greedy_move(GameState, BestMove) :-
+
+    % Get all the valid moves
     valid_moves(GameState,ListOfMoves),
+
+    % Find all pairs of valid moves and their corresponding values 
     findall(Value-Move, (member(Move, ListOfMoves),move(Move, GameState, NewGameState), value(NewGameState, Value)), Result),
+
+    % Sort the pairs Value-Move in descending order according to Value
     keysort(Result,SortedResultAsc),
     reverse(SortedResultAsc,SortedResultDsc),
-    % print(SortedResultDsc),nl,
-    %nth0(0,SortedResultDsc,BestValue-BestMove),
+
+    % Get the moves that lead to the best value and randomly choose one of them
     group_pairs_by_key(SortedResultDsc, [_-BestMoves|_]),
     length(BestMoves,Length),
     random_between(1,Length,Rnd),
     nth1(Rnd,BestMoves,BestMove).
 
-
+/**
+*   value(+GameState,-Value)
+*
+*   Evaluate the given gamestate. A boards value is determined by three factors. The first is the length of the largest sub-board where the player wins. This makes it so that
+*   the bot has an incentive to build a path that unites the margins. The second factor is the length of the largest un-cuttable sub-board where the player wins. This factor is
+*   very similiar to the first one but it's meant to reward plays that don't lead to the possibility of receiving a cut. The last factor is the value of the next player's best-move.
+*   This factor calculates what the next player would play given the current gamestate and "devalues"(subtracts) the current Gamestate's value accordingly to deturn the bot from making favourable 
+*   plays to the opponent. This factor might be negative in case of a double play where the next move is still the bots move in which case the next most favourable play is of good value.
+*/
 value(GameState, Value) :- !,
 
-    % print(GameState),
-    GameState = [OctagonBoard,SquareBoard, DefaultHeight, DefaultWidth,_,_,_, NumPlays-CutFlag | []],
+    % Setup needed variables. Extract variables from gamestate, transpose the board  and switch the height/width values if needed
+    GameState = [OctagonBoard,SquareBoard, DefaultHeight, DefaultWidth,_,_,_, _-_ | []],
     get_game_previous_player(GameState,PrevPlayer),
     get_real_side_lengths(PrevPlayer,DefaultWidth,DefaultHeight,Width,Height),
     orient_board(OctagonBoard, SquareBoard,PrevPlayer,OrientedOctagonBoard,OrientedSquareBoard),
+
+    % Get SBValue1 - Highest length of the sub-board in which Plaer wins the game
+
+    % Build the connection graph
     build_graph([OrientedOctagonBoard, OrientedSquareBoard, Height, Width], PrevPlayer, Graph1),!,
-    
-    % Get SBValue1
     get_highest_sub_board_value(OrientedOctagonBoard,Width,Height,PrevPlayer,Graph1,SBValue1),
 
-    % Get SBValue2
+    % Get SBValue2 - Highest length of the uncuttable sub-board in which Player wins the game
+
+    % Remove cuttable squares
     remove_cuttable_squares(OrientedOctagonBoard,OrientedSquareBoard,PrevPlayer,NewSquareBoard),
 
+    % Build the connection graph
     build_graph([OrientedOctagonBoard, NewSquareBoard, Height, Width], PrevPlayer, Graph2),!,
     get_highest_sub_board_value(OrientedOctagonBoard,Width,Height,PrevPlayer,Graph2,SBValue2),
 
-    % Player 2 section
+    % Calculate the value of the next player's move 
 
-    % GameState2 = [OctagonBoard,SquareBoard, Height, Width,_,_,PrevPlayer, 1-CutFlag | []],
+    % Get all the valid moves
     valid_moves(GameState,ListOfMoves),
-    findall(Val-Move, (member(Move, ListOfMoves),move(Move, GameState, NewGameState), value_simple(NewGameState, Val)), Result),
+
+    % Find all pairs of valid moves and their corresponding values. The difference between this segment and the similar segment in
+    % greedy_move(+GameState, -Move) is that this segment uses value_next(+GameState,Value) to obtain it's values. The essential difference
+    % is that value_next does not only values according to it's state and doesn't take the next player's move into account.
+    findall(Val-Move, (member(Move, ListOfMoves),move(Move, GameState, NewGameState), value_next(NewGameState, Val)), Result),
     keysort(Result,SortedResultAsc),
     reverse(SortedResultAsc,SortedResultDsc),
-    % print(SortedResultDsc),
-    nth0(0,SortedResultDsc,Value2-_),
+    nth0(0,SortedResultDsc,NextPlayerValue-_),
 
-    write('-- Player('),write(PrevPlayer),write(') SBValue1: '),write(SBValue1), write(' SBValue2: '),write(SBValue2),write(' Value2: '),write(Value2),nl,
-    % write('-- Player('),write(PrevPlayer),write(') SBValue1: '),write(SBValue1), write(' SBValue2: '),write(SBValue2),nl,
 
-    Value is SBValue1 + SBValue2 - Value2.
+    Value is SBValue1 + SBValue2 - NextPlayerValue.
 
-value_simple(GameState, Value) :- !,
+/**
+*   value_next(+GameState, -Value)
+*
+*   This predicate is very similiar 'value'. The only difference is that it only calculates the first two described factors and does try do predict the opponents play. The value returned
+*   might be negative in case of a double play (after a cut, see explanation in 'value')  
+*/
+value_next(GameState, Value) :- !,
 
-    % print(GameState),
-    GameState = [OctagonBoard,SquareBoard, DefaultHeight, DefaultWidth,_,_,_, NumPlays-CutFlag | []],
+    % Setup needed variables. Extract variables from gamestate, transpose the board  and switch the height/width values if needed
+    GameState = [OctagonBoard,SquareBoard, DefaultHeight, DefaultWidth,_,_,_, _-CutFlag | []],
     get_game_previous_player(GameState,PrevPlayer),
-    % write('Prev player is '),write(PrevPlayer),nl,
     get_real_side_lengths(PrevPlayer,DefaultWidth,DefaultHeight,Width,Height),
     orient_board(OctagonBoard, SquareBoard,PrevPlayer,OrientedOctagonBoard,OrientedSquareBoard),
+
+    % Get SBValue1 - Highest length of the sub-board in which Player wins the game
+
+    % Build the connection graph    
     build_graph([OrientedOctagonBoard, OrientedSquareBoard, Height, Width], PrevPlayer, Graph1),!,
-    
-    % Get SBValue1
     get_highest_sub_board_value(OrientedOctagonBoard,Width,Height,PrevPlayer,Graph1,SBValue1),
 
-    % Get SBValue2
+    % Get SBValue2 - Highest length of the uncuttable sub-board in which Player wins the game
+
+    % Remove cuttable squares
     remove_cuttable_squares(OrientedOctagonBoard,OrientedSquareBoard,PrevPlayer,NewSquareBoard),
 
+    % Build the connection graph
     build_graph([OrientedOctagonBoard, NewSquareBoard, Height, Width], PrevPlayer, Graph2),!,
     get_highest_sub_board_value(OrientedOctagonBoard,Width,Height,PrevPlayer,Graph2,SBValue2),
+
+    % Modifier used to make the value positive or negative in case of a double play
     get_modifier(CutFlag,Modifier),
     Value is (SBValue1 + SBValue2)*Modifier.
 
@@ -140,17 +129,24 @@ value_simple(GameState, Value) :- !,
 get_modifier(1,-1).
 get_modifier(0,1).
 
-
+/**
+*   get_highest_sub_board_value(+OctagonBoard,+Width,+Height,+Player,+Graph,-Value)
+*
+*   This predicate returns in Value the length of the largest subboard where the Player wins according to the OctagonBoard and the adjacency Graph,
+*/
 get_highest_sub_board_value(OctagonBoard,Width,Height,Player,Graph,Value) :- !,get_highest_sub_board_value_iter(OctagonBoard,Width,Height,Player,Graph,Height,Value).
 
-get_highest_sub_board_value_iter(_,_,_,_,[],_,1) :-!.
-get_highest_sub_board_value_iter(_,_,_,_,_,0,0) :-!.
+% Smallest length of a subboard (1 tile)
+get_highest_sub_board_value_iter(_,_,_,_,[],_,1) :-!.  
+
+% Value of an empty board is 0
+get_highest_sub_board_value_iter(_,_,_,_,_,0,0) :-!.    
 
 get_highest_sub_board_value_iter(OctagonBoard,Width,Height,Player,Graph,CurrentBoardSize,Value) :-
 
+    % AlternativeCount designates the number of sub-boards of CurrentBoardSize that need to be checked
     AlternativeCount is Height - CurrentBoardSize + 1,
 
-    % write('-sub_board_iter1 - Number of alternatives: '), write(AlternativeCount), nl,
     \+check_sub_boards(OctagonBoard,Width,Height,Player,Graph,AlternativeCount,AlternativeCount),
 
     NewSize is CurrentBoardSize - 1,
@@ -160,7 +156,6 @@ get_highest_sub_board_value_iter(OctagonBoard,Width,Height,Player,Graph,CurrentB
 
     AlternativeCount is Height - CurrentBoardSize + 1,
 
-    % write('-sub_board_iter2 - Number of alternatives: '), write(AlternativeCount), nl,
     check_sub_boards(OctagonBoard,Width,Height,Player,Graph,AlternativeCount,AlternativeCount),
 
     Value is CurrentBoardSize.
@@ -169,10 +164,8 @@ check_sub_boards(_,_,_,_,_,_,0) :- !,fail.
 
 check_sub_boards(OctagonBoard,Width,Height,Player,Graph,AlternativeCount,CurrentAlternative) :-
     LowBar is CurrentAlternative - 1,
-    HighBar is LowBar + Height - AlternativeCount,
-    % write('-- board_iter1 - Number of alternatives: '), write(AlternativeCount), write(' Lowbar: '),write(LowBar), write(' Highbar: '),write(HighBar),nl,
     
-    \+get_valid_starters(OctagonBoard,Player,LowBar,Width,_),!,
+    \+get_valid_starters(OctagonBoard,Player,LowBar,Width,_),
 
     CurrentAlternative1 is CurrentAlternative - 1, 
     check_sub_boards(OctagonBoard,Width,Height,Player,Graph,AlternativeCount,CurrentAlternative1).
@@ -181,17 +174,13 @@ check_sub_boards(OctagonBoard,Width,Height,Player,Graph,AlternativeCount,Current
 check_sub_boards(OctagonBoard,Width,Height,Player,Graph,AlternativeCount,CurrentAlternative) :-
     LowBar is CurrentAlternative - 1,
     HighBar is LowBar + Height - AlternativeCount,
-    % write('-- board_iter2 - Number of alternatives: '), write(AlternativeCount), write(' Lowbar: '),write(LowBar), write(' Highbar: '),write(HighBar),nl,
     
     get_valid_starters(OctagonBoard,Player,LowBar,Width,Starters),
 
     gen_row_ids(Width,HighBar,IDList),
-    % print(Starters),nl,
-    % print(IDList),nl,
-    % print(Graph),nl,
+
     
     \+reachable_from_list(Graph,Starters,IDList),!,
-    % write('not reachable'),nl,
     CurrentAlternative1 is CurrentAlternative - 1, 
     check_sub_boards(OctagonBoard,Width,Height,Player,Graph,AlternativeCount,CurrentAlternative1).
 
