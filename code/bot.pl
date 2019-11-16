@@ -163,7 +163,7 @@ get_highest_sub_board_value_iter(OctagonBoard,Width,Height,Player,Graph,CurrentB
     NewSize is CurrentBoardSize - 1,
     get_highest_sub_board_value_iter(OctagonBoard,Width,Height,Player,Graph,NewSize,Value).
 
-get_highest_sub_board_value_iter(OctagonBoard,Width,Height,Player,Graph,CurrentBoardSize,Value) :-
+get_highest_sub_board_value_iter(_,_,_,_,_,CurrentBoardSize,Value) :-
 
     % There is a subboard of size CurrentBoardSize where Player Wins
     Value is CurrentBoardSize.
@@ -194,4 +194,4 @@ check_sub_boards(OctagonBoard,Width,Height,Player,Graph,AlternativeCount,Current
     CurrentAlternative1 is CurrentAlternative - 1, 
     check_sub_boards(OctagonBoard,Width,Height,Player,Graph,AlternativeCount,CurrentAlternative1).
 
-check_sub_boards(OctagonBoard,Width,Height,Player,Graph,AlternativeCount,CurrentAlternative) :-!.
+check_sub_boards(_,_,_,_,_,_,_) :-!.
