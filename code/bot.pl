@@ -37,6 +37,7 @@ greedy_move(GameState, BestMove) :-
     % Sort the pairs Value-Move in descending order according to Value
     keysort(Result,SortedResultAsc),
     reverse(SortedResultAsc,SortedResultDsc),
+    print(SortedResultDsc),
 
     % Get the moves that lead to the best value and randomly choose one of them
     group_pairs_by_key(SortedResultDsc, [_-BestMoves|_]),
@@ -101,7 +102,7 @@ value(GameState, Value) :- !,
 value_next(GameState, Value) :- !,
 
     % Setup needed variables. Extract variables from gamestate, transpose the board  and switch the height/width values if needed
-    GameState = [OctagonBoard,SquareBoard, DefaultHeight, DefaultWidth,_,_,_, _-CutFlag | []],
+    GameState = [OctagonBoard,SquareBoard, DefaultHeight, DefaultWidth,_,_,_, NumPlays-CutFlag | []],
     get_game_previous_player(GameState,PrevPlayer),
     get_real_side_lengths(PrevPlayer,DefaultWidth,DefaultHeight,Width,Height),
     orient_board(OctagonBoard, SquareBoard,PrevPlayer,OrientedOctagonBoard,OrientedSquareBoard),
@@ -122,12 +123,13 @@ value_next(GameState, Value) :- !,
     get_highest_sub_board_value(OrientedOctagonBoard,Width,Height,PrevPlayer,Graph2,SBValue2),
 
     % Modifier used to make the value positive or negative in case of a double play
-    get_modifier(CutFlag,Modifier),
+    get_modifier(CutFlag,NumPlays,Modifier),
     Value is (SBValue1 + SBValue2)*Modifier.
 
 
-get_modifier(1,-1).
-get_modifier(0,1).
+get_modifier(1,2,-1).
+get_modifier(1,1,1).
+get_modifier(0,_,1).
 
 /**
 *   get_highest_sub_board_value(+OctagonBoard,+Width,+Height,+Player,+Graph,-Value)
@@ -147,7 +149,7 @@ get_highest_sub_board_value_iter(OctagonBoard,Width,Height,Player,Graph,CurrentB
     % AlternativeCount designates the number of sub-boards of CurrentBoardSize that need to be checked
     AlternativeCount is Height - CurrentBoardSize + 1,
 
-    \+check_sub_boards(OctagonBoard,Width,Height,Player,Graph,AlternativeCount,AlternativeCount),
+    \+check_sub_boards(OctagonBoard,Width,Height,Player,Graph,AlternativeCount,AlternativeCount),!,
 
     NewSize is CurrentBoardSize - 1,
     get_highest_sub_board_value_iter(OctagonBoard,Width,Height,Player,Graph,NewSize,Value).
@@ -155,9 +157,6 @@ get_highest_sub_board_value_iter(OctagonBoard,Width,Height,Player,Graph,CurrentB
 get_highest_sub_board_value_iter(OctagonBoard,Width,Height,Player,Graph,CurrentBoardSize,Value) :-
 
     AlternativeCount is Height - CurrentBoardSize + 1,
-
-    check_sub_boards(OctagonBoard,Width,Height,Player,Graph,AlternativeCount,AlternativeCount),
-
     Value is CurrentBoardSize.
 
 check_sub_boards(_,_,_,_,_,_,0) :- !,fail.
@@ -165,7 +164,7 @@ check_sub_boards(_,_,_,_,_,_,0) :- !,fail.
 check_sub_boards(OctagonBoard,Width,Height,Player,Graph,AlternativeCount,CurrentAlternative) :-
     LowBar is CurrentAlternative - 1,
     
-    \+get_valid_starters(OctagonBoard,Player,LowBar,Width,_),
+    \+get_valid_starters(OctagonBoard,Player,LowBar,Width,_),!,
 
     CurrentAlternative1 is CurrentAlternative - 1, 
     check_sub_boards(OctagonBoard,Width,Height,Player,Graph,AlternativeCount,CurrentAlternative1).
