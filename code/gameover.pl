@@ -146,27 +146,26 @@ remove_cuttable_squares_aux(OctagonBoard, [Row | SquareBoard], Y, Player, [NewRo
 remove_cuttable_squares_row(OctagonBoard, [Element | Row], Y, Player, [Element | NewRow]) :-
     remove_cuttable_squares_row_aux(OctagonBoard, Row, 1, Y, Player, NewRow).
 
-remove_cuttable_squares_row_aux(_OctagonBoard, [Element | []], _X, _Y, _Player, [Element]) :-
-    write('squares row aux last element\n').
+remove_cuttable_squares_row_aux(_OctagonBoard, [Element | []], _X, _Y, _Player, [Element]).
 
 % Caso element seja cuttable
 remove_cuttable_squares_row_aux(OctagonBoard, [Player | Row], X, Y, Player, [0 | NewRow]) :-
     is_cuttable(OctagonBoard, Player, X, Y),
-    write(X), write('-'), write(Y), write(' is cuttable'), nl,
+    %write(X), write('-'), write(Y), write(' is cuttable'), nl,
     XNext is X + 1,
-    write(X), write('-'), write(Y), nl,
+    %write(X), write('-'), write(Y), nl,
     remove_cuttable_squares_row_aux(OctagonBoard, Row, XNext, Y, Player, NewRow).
 
 % Caso element n seja cuttable
 remove_cuttable_squares_row_aux(OctagonBoard, [Player | Row], X, Y, Player, [Player | NewRow]) :-
     XNext is X + 1,
-    write(X), write('-'), write(Y), nl,
+    %write(X), write('-'), write(Y), nl,
     remove_cuttable_squares_row_aux(OctagonBoard, Row, XNext, Y, Player, NewRow).
 
 % Caso element n seja do jogador a testar
 remove_cuttable_squares_row_aux(OctagonBoard, [Element | Row], X, Y, Player, [Element | NewRow]) :-
     XNext is X + 1,
-    write(X), write('-'), write(Y), nl,
+    %write(X), write('-'), write(Y), nl,
     remove_cuttable_squares_row_aux(OctagonBoard, Row, XNext, Y, Player, NewRow).
 
 %%%%%
