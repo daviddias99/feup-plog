@@ -4,10 +4,17 @@
 :- ensure_loaded('gameover.pl').
 :- ensure_loaded('display.pl').
 
+%   In this file:
+% 
+% - random_move(+GameState,-Move)
+% - greedy_move(+GameState,-BestMove)
+% - value(+GameState,-Value)
+% - value_next(+GameState, -Value)
+% - get_highest_sub_board_value(+OctagonBoard,+Width,+Height,+Player,+Graph,-Value)
+
 /**
 *   Level-1 Bot - This bot chooses any of the possible moves given a gamestate
 */
-
 
 /**
 *   random_move(+GameState,-Move)
@@ -18,8 +25,9 @@ random_move(GameState, Move) :-
     valid_moves(GameState, ListOfMoves),
     random_member(Move, ListOfMoves).
 
-
-% Level-2 Bot - This bot chooses the "best" possible move at a given gamestate
+/**
+* Level-2 Bot - This bot chooses the "best" possible move at a given gamestate
+*/
 
 /**
 *   greedy_move(+GameState,-BestMove)
@@ -149,6 +157,7 @@ get_highest_sub_board_value_iter(OctagonBoard,Width,Height,Player,Graph,CurrentB
     % AlternativeCount designates the number of sub-boards of CurrentBoardSize that need to be checked
     AlternativeCount is Height - CurrentBoardSize + 1,
 
+    % Check if there are any CurrentBoardSize subboards where Player wins
     \+check_sub_boards(OctagonBoard,Width,Height,Player,Graph,AlternativeCount,AlternativeCount),!,
 
     NewSize is CurrentBoardSize - 1,
@@ -156,7 +165,7 @@ get_highest_sub_board_value_iter(OctagonBoard,Width,Height,Player,Graph,CurrentB
 
 get_highest_sub_board_value_iter(OctagonBoard,Width,Height,Player,Graph,CurrentBoardSize,Value) :-
 
-    AlternativeCount is Height - CurrentBoardSize + 1,
+    % There is a subboard of size CurrentBoardSize where Player Wins
     Value is CurrentBoardSize.
 
 check_sub_boards(_,_,_,_,_,_,0) :- !,fail.
@@ -174,11 +183,13 @@ check_sub_boards(OctagonBoard,Width,Height,Player,Graph,AlternativeCount,Current
     LowBar is CurrentAlternative - 1,
     HighBar is LowBar + Height - AlternativeCount,
     
+    % get starting cells
     get_valid_starters(OctagonBoard,Player,LowBar,Width,Starters),
 
+    % get ending cell ids
     gen_row_ids(Width,HighBar,IDList),
 
-    
+    % Check if such cells are reachable
     \+reachable_from_list(Graph,Starters,IDList),!,
     CurrentAlternative1 is CurrentAlternative - 1, 
     check_sub_boards(OctagonBoard,Width,Height,Player,Graph,AlternativeCount,CurrentAlternative1).
