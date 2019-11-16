@@ -37,8 +37,8 @@ init_game_state([[
              [0, 0, 0, 0, 0, 0, 0, 0],
              [0, 0, 0, 0, 0, 0, 0, 0],
              [0, 0, 0, 0, 0, 0, 0, 0],
-             [0, 0, 0, 0, 0, 0, 0, 0],
-             [1, 0, 0, 0, 0, 0, 0, 0],
+             [0, 0, 0, 0, 0, 0, 2, 0],
+             [1, 0, 0, 0, 0, 0, 0, 2],
              [1, 2, 0, 0, 0, 0, 0, 0],
              [0, 0, 2, 0, 0, 1, 0, 0]
             ],
@@ -48,7 +48,7 @@ init_game_state([[
              [2, 0, 0, 0, 0, 0, 0, 0, 2],
              [2, 0, 0, 0, 0, 0, 0, 0, 2],
              [2, 0, 0, 0, 0, 0, 0, 0, 2],
-             [2, 0, 0, 0, 0, 0, 0, 0, 2],
+             [2, 0, 0, 0, 0, 0, 0, 2, 2],
              [2, 0, 0, 0, 0, 0, 0, 0, 2],
              [2, 0, 2, 0, 0, 0, 0, 0, 2],
              [0, 1, 1, 1, 1, 1, 1, 1, 0]
@@ -71,17 +71,14 @@ random_move(GameState, Move) :-
 
 greedy_move(GameState, BestMove) :-
     valid_moves(GameState,ListOfMoves),
-    findall(Value-Move, (member(Move, ListOfMoves),move(Move, GameState, NewGameState),print(Move),nl, value(NewGameState, Value)), Result),
+    findall(Value-Move, (member(Move, ListOfMoves),move(Move, GameState, NewGameState), value(NewGameState, Value)), Result),
     keysort(Result,SortedResultAsc),
     reverse(SortedResultAsc,SortedResultDsc),
-    print(SortedResultDsc),nl,
+    % print(SortedResultDsc),nl,
     %nth0(0,SortedResultDsc,BestValue-BestMove),
     group_pairs_by_key(SortedResultDsc, [_-BestMoves|_]),
-    print(BestMoves),nl,
     length(BestMoves,Length),
-    print(Length),nl,
     random_between(1,Length,Rnd),
-    print(Rnd),nl,
     nth1(Rnd,BestMoves,BestMove).
 
 
@@ -104,26 +101,25 @@ value(GameState, Value) :- !,
 
     % Player 2 section
 
+    % GameState2 = [OctagonBoard,SquareBoard, Height, Width,_,_,PrevPlayer, 1-CutFlag | []],
+    valid_moves(GameState,ListOfMoves),
+    findall(Val-Move, (member(Move, ListOfMoves),move(Move, GameState, NewGameState), value_simple(NewGameState, Val)), Result),
+    keysort(Result,SortedResultAsc),
+    reverse(SortedResultAsc,SortedResultDsc),
+    % print(SortedResultDsc),
+    nth0(0,SortedResultDsc,Value2-_),
 
-
-    % GameState2 = [OctagonBoard,SquareBoard, Height, Width,_,_,PrevPlayer, NumPlays-CutFlag | []],
-    % valid_moves(GameState,ListOfMoves),
-    % findall(Val-Move, (member(Move, ListOfMoves),move(Move, GameState2, NewGameState), value_simple(NewGameState, Val)), Result),
-    % keysort(Result,SortedResultAsc),
-    % reverse(SortedResultAsc,SortedResultDsc),
-    % % print(SortedResultDsc),
-    % nth0(0,SortedResultDsc,Value2-_),
-
-    % write('-- Player('),write(PrevPlayer),write(') SBValue1: '),write(SBValue1), write(' SBValue2: '),write(SBValue2),write(' Value2: '),write(Value2),nl,
+    write('-- Player('),write(PrevPlayer),write(') SBValue1: '),write(SBValue1), write(' SBValue2: '),write(SBValue2),write(' Value2: '),write(Value2),nl,
     % write('-- Player('),write(PrevPlayer),write(') SBValue1: '),write(SBValue1), write(' SBValue2: '),write(SBValue2),nl,
 
-    Value is SBValue1 + SBValue2 .
+    Value is SBValue1 + SBValue2 - Value2.
 
 value_simple(GameState, Value) :- !,
 
     % print(GameState),
-    GameState = [OctagonBoard,SquareBoard, Height, Width,_,_,_, NumPlays-_ | []],
+    GameState = [OctagonBoard,SquareBoard, Height, Width,_,_,_, NumPlays-CutFlag | []],
     get_game_previous_player(GameState,PrevPlayer),
+    % write('Prev player is '),write(PrevPlayer),nl,
     orient_board(OctagonBoard, SquareBoard,PrevPlayer,OrientedOctagonBoard,OrientedSquareBoard),
     build_graph([OrientedOctagonBoard, OrientedSquareBoard, Height, Width], PrevPlayer, Graph1),!,
     
@@ -135,8 +131,12 @@ value_simple(GameState, Value) :- !,
 
     build_graph([OrientedOctagonBoard, NewSquareBoard, Height, Width], PrevPlayer, Graph2),!,
     get_highest_sub_board_value(OrientedOctagonBoard,Width,Height,PrevPlayer,Graph2,SBValue2),
-    Value is SBValue1 + SBValue2.
+    get_modifier(CutFlag,Modifier),
+    Value is (SBValue1 + SBValue2)*Modifier.
 
+
+get_modifier(1,-1).
+get_modifier(0,1).
 
 
 get_highest_sub_board_value(OctagonBoard,Width,Height,Player,Graph,Value) :- !,get_highest_sub_board_value_iter(OctagonBoard,Width,Height,Player,Graph,Height,Value).
