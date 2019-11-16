@@ -49,7 +49,6 @@ continue_game(NewGameState) :-
 
 game_loop(GameState) :-
     display_game(GameState), 
-    print(GameState),
     repeat, get_move(GameState, Move), move(Move, GameState, NewGameState), !,
     continue_game(NewGameState).
 
