@@ -151,21 +151,35 @@ remove_cuttable_squares_row_aux(_OctagonBoard, [Element | []], _X, _Y, _Player, 
 % Caso element seja cuttable
 remove_cuttable_squares_row_aux(OctagonBoard, [Player | Row], X, Y, Player, [0 | NewRow]) :-
     is_cuttable(OctagonBoard, Player, X, Y),
+<<<<<<< HEAD
     % write(X), write('-'), write(Y), write(' is cuttable'), nl,
     XNext is X + 1,
     % write(X), write('-'), write(Y), nl,
+=======
+    %write(X), write('-'), write(Y), write(' is cuttable'), nl,
+    XNext is X + 1,
+    %write(X), write('-'), write(Y), nl,
+>>>>>>> bc96bfee44f0192f23d61b93dcca1577debbc61f
     remove_cuttable_squares_row_aux(OctagonBoard, Row, XNext, Y, Player, NewRow).
 
 % Caso element n seja cuttable
 remove_cuttable_squares_row_aux(OctagonBoard, [Player | Row], X, Y, Player, [Player | NewRow]) :-
     XNext is X + 1,
+<<<<<<< HEAD
     % write(X), write('-'), write(Y), nl,
+=======
+    %write(X), write('-'), write(Y), nl,
+>>>>>>> bc96bfee44f0192f23d61b93dcca1577debbc61f
     remove_cuttable_squares_row_aux(OctagonBoard, Row, XNext, Y, Player, NewRow).
 
 % Caso element n seja do jogador a testar
 remove_cuttable_squares_row_aux(OctagonBoard, [Element | Row], X, Y, Player, [Element | NewRow]) :-
     XNext is X + 1,
+<<<<<<< HEAD
     % write(X), write('-'), write(Y), nl,
+=======
+    %write(X), write('-'), write(Y), nl,
+>>>>>>> bc96bfee44f0192f23d61b93dcca1577debbc61f
     remove_cuttable_squares_row_aux(OctagonBoard, Row, XNext, Y, Player, NewRow).
 
 %%%%%
