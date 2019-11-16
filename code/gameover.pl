@@ -16,6 +16,24 @@
 
 init_b([[[0,1,2,2,0,0,0,0],[0,1,0,2,0,0,0,2],[0,1,2,0,0,0,0,0],[0,1,0,0,0,0,0,0],[0,1,0,0,0,0,0,0],[0,1,2,0,0,0,0,0],[0,1,2,0,0,0,0,0],[0,1,0,0,0,0,0,0]],[[0,1,1,1,1,1,1,1,0],[2,0,0,2,0,0,0,0,2],[2,0,0,2,0,0,0,0,2],[2,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,0,2],[2,0,0,0,0,0,0,0,2],[0,1,1,1,1,1,1,1,0]],8,8,'P','P',2,1-0]).
 
+init_game_state([[
+             [1, 2, 2, 2],
+             [2, 1, 2, 1],
+             [2, 1, 1, 1]
+            ],
+            [
+             [0, 1, 1, 1, 0],
+             [2, 2, 2, 2, 2],
+             [2, 0, 1, 1, 2],
+             [0, 1, 1, 1, 0]  
+            ],
+            3,
+            4,
+            1,
+            1,
+            1,
+            1-0 ]).
+
 /**
 *   gameover(+Board,-Player) 
 *
@@ -37,19 +55,20 @@ check_for_win([OctagonBoard,SquareBoard,Height,Width | _] ,Player) :-
     remove_cuttable_squares(OctagonBoard, SquareBoard, Player, NewSquareBoard),
 
     orient_board(OctagonBoard, NewSquareBoard,Player,OrientedOctagonBoard,OrientedSquareBoard),
+    get_real_side_lengths(Player,Width,Height,RealWidth,RealHeight),
 
     % Get the octagons where the path may start(there are connected with the Player's top board edge). This function is meant to optimize the 
     % process as there is no need to build the graph(which is an operation that is computationally expensive) if there is no starting pice to begin with.
 
-    get_valid_starters(OrientedOctagonBoard,Player,0,Width,Starters),
+    get_valid_starters(OrientedOctagonBoard,Player,0,RealWidth,Starters),
 
     % Build the player-path graph
-    build_graph([OrientedOctagonBoard,OrientedSquareBoard,Height,Width],Player,Graph),
+    build_graph([OrientedOctagonBoard,OrientedSquareBoard,RealHeight,RealWidth],Player,Graph),
 
     % Check if the opposing board edge is connected to the starting one via a path
 
-    LastRowID is Height -1,
-    gen_row_ids(Width,LastRowID,LastRowIDs),!,
+    LastRowID is RealHeight -1,
+    gen_row_ids(RealWidth,LastRowID,LastRowIDs),!,
     reachable_from_list(Graph,Starters,LastRowIDs).
 
 

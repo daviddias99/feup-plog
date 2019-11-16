@@ -85,8 +85,9 @@ greedy_move(GameState, BestMove) :-
 value(GameState, Value) :- !,
 
     % print(GameState),
-    GameState = [OctagonBoard,SquareBoard, Height, Width,_,_,_, NumPlays-CutFlag | []],
+    GameState = [OctagonBoard,SquareBoard, DefaultHeight, DefaultWidth,_,_,_, NumPlays-CutFlag | []],
     get_game_previous_player(GameState,PrevPlayer),
+    get_real_side_lengths(PrevPlayer,DefaultWidth,DefaultHeight,Width,Height),
     orient_board(OctagonBoard, SquareBoard,PrevPlayer,OrientedOctagonBoard,OrientedSquareBoard),
     build_graph([OrientedOctagonBoard, OrientedSquareBoard, Height, Width], PrevPlayer, Graph1),!,
     
@@ -117,9 +118,10 @@ value(GameState, Value) :- !,
 value_simple(GameState, Value) :- !,
 
     % print(GameState),
-    GameState = [OctagonBoard,SquareBoard, Height, Width,_,_,_, NumPlays-CutFlag | []],
+    GameState = [OctagonBoard,SquareBoard, DefaultHeight, DefaultWidth,_,_,_, NumPlays-CutFlag | []],
     get_game_previous_player(GameState,PrevPlayer),
     % write('Prev player is '),write(PrevPlayer),nl,
+    get_real_side_lengths(PrevPlayer,DefaultWidth,DefaultHeight,Width,Height),
     orient_board(OctagonBoard, SquareBoard,PrevPlayer,OrientedOctagonBoard,OrientedSquareBoard),
     build_graph([OrientedOctagonBoard, OrientedSquareBoard, Height, Width], PrevPlayer, Graph1),!,
     

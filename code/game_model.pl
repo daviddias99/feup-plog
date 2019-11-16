@@ -1,4 +1,4 @@
-generate_initial_game_state(Width, Height, P1Type, P2Type, [OctagonBoard, SquareBoard, Height, Width, P1Type, P2Type, 1, 1-0 |[]]) :-
+generate_initial_game_state(Height,Width , P1Type, P2Type, [OctagonBoard, SquareBoard, Height, Width, P1Type, P2Type, 1, 1-0 |[]]) :-
     Width > 2,
     Height > 2,
     generate_octagon_board(Width, Height, OctagonBoard),
@@ -61,6 +61,9 @@ get_game_previous_player(GameState, PreviousPlayer) :-
 
 get_other_player(1,2).
 get_other_player(2,1).
+
+get_real_side_lengths(1,Width,Height,Width,Height).
+get_real_side_lengths(2,Width,Height,Height,Width).
 
 generate_octagon_board(Width, Height, OctagonBoard) :-
     generate_octagon_board_row(Width, Row),
