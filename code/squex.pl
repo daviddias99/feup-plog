@@ -24,7 +24,7 @@ start_game(0).
 start_game(Option) :-
     get_players_type(Option, P1Type, P2Type),
     repeat, input_board_size(Height, Width), generate_initial_game_state(Height, Width, P1Type, P2Type, GameState), !,
-    game_loop(GameState),
+    game_loop(GameState), !,
     press_enter_to_continue,
     play.
 

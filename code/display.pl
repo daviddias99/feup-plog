@@ -46,15 +46,13 @@ display_cut_message(2-1) :-
 
 display_cut_message(_).
 
-display_turn_message(Player, Width) :-
+display_box_message(Msg, MsgLength, Width) :- 
     display_box_top(Width, Width),
-    ansi_format([bold], '   ║', [world]),
-    NWhiteSpace is div(Width * 8 + 2 - 14, 2),
-    display_n_whitespace(NWhiteSpace),
-    ansi_format([bold], 'PLAYER ', [world]), write_player(Player), ansi_format([bold], '\'S TURN', [world]),
-    display_n_whitespace(NWhiteSpace),
-    ansi_format([bold], '║\n', [world]),
-    display_box_bottom(Width, Width), !.
+    display_box_middle(Msg, MsgLength, Width),
+    display_box_bottom(Width, Width).
+
+display_turn_message(Player, Width) :-
+    display_box_message((ansi_format([bold], 'PLAYER ', [world]), write_player(Player), ansi_format([bold], '\'S TURN', [world])), 14, Width).
 
 /**
 *   display_gameover(+GameState)
@@ -67,15 +65,14 @@ display_gameover([OctagonBoard, SquareBoard, Height, Width | _], Player) :-
     display_gameover_message(Player, Width), nl.
 
 display_gameover_message(Player, Width) :-
-    display_box_top(Width, Width), 
-    display_gameover_middle(Player, Width),
-    display_box_bottom(Width, Width), !.
+    display_box_message((
+    ansi_format([bold], 'PLAYER ', [world]), write_player(Player), ansi_format([bold], ' WON!', [world])), 12, Width).
 
-display_gameover_middle(Player, Width) :-
+display_box_middle(Msg, MsgLength, Width) :-
     ansi_format([bold], '   ║', [world]),
-    NWhiteSpace is div(Width * 8 + 2 - 12, 2),
+    NWhiteSpace is div(Width * 8 + 2 - MsgLength, 2),
     display_n_whitespace(NWhiteSpace),
-    ansi_format([bold], 'PLAYER ', [world]), write_player(Player), ansi_format([bold], ' WON!', [world]),
+    Msg,
     display_n_whitespace(NWhiteSpace),
     ansi_format([bold], '║\n', [world]).
 
