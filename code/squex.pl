@@ -17,6 +17,10 @@
 play() :-
     display_main_screen,
     input_menu_option(Option),
+    start_game(Option).
+
+start_game(0).
+start_game(Option) :-
     get_players_type(Option, P1Type, P2Type),
     repeat, input_board_size(Height, Width), generate_initial_game_state(Height, Width, P1Type, P2Type, GameState), !,
     game_loop(GameState).
@@ -85,3 +89,18 @@ choose_move(GameState, 2, Move) :-
     greedy_move(GameState, Move),
     write('CHOSEN MOVE: '), write(Move), nl,
     press_enter_to_continue.
+
+
+init_game_state([
+     [[1, 2, 2, 2], 
+      [2, 1, 2, 1],
+      [0, 2, 1, 1],
+      [2, 1, 1, 1]],
+     [[0, 1, 1, 1, 0], 
+      [2, 1, 2, 2, 2],
+      [2, 2, 2, 1, 2],
+      [2, 2, 1, 1, 2],
+      [0, 1, 1, 1, 0]],
+      4, 4, 2, 2, 2, 1-0]).
+
+test(M) :- init_game_state(GS), greedy_move(GS, M).
