@@ -41,7 +41,7 @@ greedy_move(GameState, BestMove) :-
     valid_moves(GameState,ListOfMoves),
 
     % Find all pairs of valid moves and their corresponding values 
-    findall(Value-Move, (member(Move, ListOfMoves),move(Move, GameState, NewGameState), print(NewGameState), value(NewGameState, Value)), Result),
+    findall(Value-Move, (member(Move, ListOfMoves),move(Move, GameState, NewGameState), value(NewGameState, Value)), Result),
 
     % Sort the pairs Value-Move in descending order according to Value
     keysort(Result,SortedResultAsc),
@@ -61,12 +61,12 @@ greedy_move(GameState, BestMove) :-
 *   the bot has an incentive to build a path that unites the margins. The second factor is the length of the largest un-cuttable sub-board where the player wins. This factor is
 *   very similiar to the first one but it's meant to reward plays that don't lead to the possibility of receiving a cut. The last factor is the value of the next player's best-move.
 *   This factor calculates what the next player would play given the current gamestate and "devalues"(subtracts) the current Gamestate's value accordingly to deturn the bot from making favourable 
-*   plays to the opponent. This factor might be negative in case of a double play where the next move is still the bots move in which case the next most favourable play is of good value.
+*   plays to the opponent. This factor might be positive in case of a double play where the next move is still the bots move in which case the next most favourable play is of good value.
 */
 value(GameState, Value) :- !,
 
     % Setup needed variables. Extract variables from gamestate, transpose the board  and switch the height/width values if needed
-    GameState = [OctagonBoard,SquareBoard, DefaultHeight, DefaultWidth,_,_,_, _-_ | []],
+    GameState = [OctagonBoard,SquareBoard, DefaultHeight, DefaultWidth,_,_,NextPlayer, _-_ | []],
     get_game_previous_player(GameState,PrevPlayer),
     get_real_side_lengths(PrevPlayer,DefaultWidth,DefaultHeight,Width,Height),
     orient_board(OctagonBoard, SquareBoard,PrevPlayer,OrientedOctagonBoard,OrientedSquareBoard),
@@ -93,7 +93,10 @@ value(GameState, Value) :- !,
 
     compute_next_player_value(GameState, ListOfMoves, NextPlayerValue),
 
-    Value is SBValue1 + SBValue2 - NextPlayerValue.
+    % Modifier used to make the value positive or negative in case of a double play
+    get_modifier(PrevPlayer,NextPlayer,Modifier),
+
+    Value is SBValue1 + SBValue2 + NextPlayerValue * Modifier.
 
 /**
 * compute_next_player_value(+GameState, +ListOfMoves, -NextPlayerValue)
@@ -120,7 +123,7 @@ compute_next_player_value(GameState, ListOfMoves, NextPlayerValue) :-
 value_next(GameState, Value) :- !,
 
     % Setup needed variables. Extract variables from gamestate, transpose the board  and switch the height/width values if needed
-    GameState = [OctagonBoard,SquareBoard, DefaultHeight, DefaultWidth,_,_,_, NumPlays-CutFlag | []],
+    GameState = [OctagonBoard,SquareBoard, DefaultHeight, DefaultWidth,_,_,_, _-_ | []],
     get_game_previous_player(GameState,PrevPlayer),
     get_real_side_lengths(PrevPlayer,DefaultWidth,DefaultHeight,Width,Height),
     orient_board(OctagonBoard, SquareBoard,PrevPlayer,OrientedOctagonBoard,OrientedSquareBoard),
@@ -140,14 +143,12 @@ value_next(GameState, Value) :- !,
     build_graph([OrientedOctagonBoard, NewSquareBoard, Height, Width], PrevPlayer, Graph2),!,
     get_highest_sub_board_value(OrientedOctagonBoard,Width,Height,PrevPlayer,Graph2,SBValue2),
 
-    % Modifier used to make the value positive or negative in case of a double play
-    get_modifier(CutFlag,NumPlays,Modifier),
-    Value is (SBValue1 + SBValue2)*Modifier.
+
+    Value is (SBValue1 + SBValue2).
 
 
-get_modifier(1,2,-1).
-get_modifier(1,1,1).
-get_modifier(0,_,1).
+get_modifier(P,P,1):-!.
+get_modifier(_,_,-1):-!.
 
 /**
 *   get_highest_sub_board_value(+OctagonBoard,+Width,+Height,+Player,+Graph,-Value)
