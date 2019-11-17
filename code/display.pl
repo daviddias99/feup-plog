@@ -15,6 +15,17 @@
 % display_square_row(+Row)
 
 
+display_cpu_choice(X-Y) :-
+    ansi_format([bold], '> CPU move ', [world]),
+    int_to_letter(Letter, X),
+    ansi_format([fg(green), bold], Letter, [world]),
+    ansi_format([bold], ', ', [world]),
+    ansi_format([fg(green), bold], Y, [world]), nl, nl.
+    
+
+int_to_letter(Letter, Int) :- Code is Int + 97, char_code(Letter, Code).
+
+
 
 /**
 *   display_game(+GameState)
@@ -23,14 +34,26 @@
 *   information about cuts
 */
 display_game([OctagonBoard, SquareBoard, Height, Width, _, _, Player, CutHappened |[]]) :-
-    display_cut_message(CutHappened), nl,
+    display_cut_message(CutHappened), nl, nl,
     display_horizontal_coordinates(a, Width), nl, 
-    display_board(OctagonBoard, SquareBoard, 0, Height, Width), nl, nl,
-    ansi_format([bold], 'Player ', [world]), write_player(Player), ansi_format([bold], '\'s turn.', [world]), nl, nl.
+    display_board(OctagonBoard, SquareBoard, 0, Height, Width), nl,
+    display_turn_message(Player, Width), nl.
 
 display_cut_message(2-1) :-
-    ansi_format([bold], 'A cut has happened. Next player gets 2 consecutive turns.', [world]), !.
+    ansi_format([bold], 'A ', [world]), 
+    ansi_format([fg(green), bold], 'CUT', [world]),
+    ansi_format([bold], ' has happened. Next player gets 2 consecutive turns.', [world]), !.
+
 display_cut_message(_).
+
+display_box_message(Msg, MsgLength, Width) :- 
+    MsgLength < Width * 8,
+    display_box_top(Width, Width),
+    display_box_middle(Msg, MsgLength, Width),
+    display_box_bottom(Width, Width).
+
+display_turn_message(Player, Width) :-
+    display_box_message((ansi_format([bold], 'PLAYER ', [world]), write_player(Player), ansi_format([bold], '\'s TURN', [world])), 14, Width).
 
 /**
 *   display_gameover(+GameState)
@@ -40,7 +63,34 @@ display_cut_message(_).
 display_gameover([OctagonBoard, SquareBoard, Height, Width | _], Player) :-
     display_horizontal_coordinates(a, Width), nl, 
     display_board(OctagonBoard, SquareBoard, 0, Height, Width), nl, nl,
-    ansi_format([bold], 'PLAYER ', [world]), write_player(Player), ansi_format([bold], ' WON!', [world]).
+    display_gameover_message(Player, Width), nl.
+
+display_gameover_message(Player, Width) :-
+    display_box_message((
+    ansi_format([bold], 'PLAYER ', [world]), write_player(Player), ansi_format([bold], ' WON!', [world])), 12, Width).
+
+display_box_middle(Msg, MsgLength, Width) :-
+    ansi_format([bold], '   ║', [world]),
+    NWhiteSpace is div(Width * 8 + 2 - MsgLength, 2),
+    display_n_whitespace(NWhiteSpace),
+    Msg,
+    display_n_whitespace(NWhiteSpace),
+    ansi_format([bold], '║\n', [world]).
+
+display_n_whitespace(0).
+display_n_whitespace(N) :- write(' '), N1 is N - 1, display_n_whitespace(N1).
+
+
+display_box_top(_, 0) :- ansi_format([bold], '══╗\n', [world]).
+display_box_top(Width, Width) :- ansi_format([bold], '   ╔═════════', [world]), N is Width - 1, display_box_top(Width, N).
+display_box_top(Width, N) :- ansi_format([bold], '════════', [world]), N1 is N - 1, display_box_top(Width, N1).
+
+
+display_box_bottom(_, 0) :- ansi_format([bold], '══╝\n', [world]).
+display_box_bottom(Width, Width) :- ansi_format([bold], '   ╚═════════', [world]), N is Width - 1, display_box_bottom(Width, N).
+display_box_bottom(Width, N) :- ansi_format([bold], '════════', [world]), N1 is N - 1, display_box_bottom(Width, N1).
+
+
 
 write_player(1) :- ansi_format([bold, fg(blue)], 1, [world]).
 write_player(2) :- ansi_format([bold, fg(red)], 2, [world]).
@@ -58,12 +108,14 @@ display_board([], [SquareRow | SquareBoard], Y, Height, Width) :-
     display_board([], SquareBoard, YNext, Width, Height).
 display_board([OctagonRow | OctagonBoard], [SquareRow | SquareBoard], Y, Height, Width) :-
     display_square_row_borders(SquareRow, Y, Height, Width), nl,
-    ansi_format(bold, Y, [world]), write(' '),  
+    display_y_coord(Y),  
     display_octagon_hor_separator(), 
     display_octagon_row(OctagonRow), nl,
     YNext is Y + 1,
     display_board(OctagonBoard, SquareBoard, YNext, Height, Width).
 
+display_y_coord(Y) :- Y >= 10, !, ansi_format(bold, Y, [world]).
+display_y_coord(Y) :- ansi_format(bold, Y, [world]), write(' ').
 
 % display pieces
 

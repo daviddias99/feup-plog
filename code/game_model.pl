@@ -21,8 +21,8 @@
 *   filled with correct squares. Checks if Width and Height is greater than 2.
 */
 generate_initial_game_state(Height,Width , P1Type, P2Type, [OctagonBoard, SquareBoard, Height, Width, P1Type, P2Type, 1, 1-0 |[]]) :-
-    Width > 2,
-    Height > 2,
+    Width > 2, Width =< 15,
+    Height > 2, Height =< 14,
     generate_octagon_board(Width, Height, OctagonBoard),
     generate_square_board(Width, Height, SquareBoard).
 
