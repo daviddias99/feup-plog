@@ -18,7 +18,7 @@ input_bot_level(Level, 2) :-
 
 input_move(X-Y, Height, Width) :- 
     ansi_format([bold], ' > Choose move ', [world]), nl,
-    input_hor_coord(X, Width), !, 
+    input_hor_coord(X, Width), 
     input_ver_coord(Y, Height).
 
 input_ver_coord(Coord, Height) :- 
@@ -26,6 +26,7 @@ input_ver_coord(Coord, Height) :-
     get_int_between('\t> Vertical coordinate ', Coord, 0, MaxCoord).
 
 input_hor_coord(Coord, Width) :- 
+    repeat,
     ansi_format([bold], '\t> Horizontal coordinate ', [world]), 
     get_letter(Letter),
     letter_to_int(Letter, Coord),
