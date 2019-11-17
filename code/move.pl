@@ -9,7 +9,6 @@ validate_move(OctagonBoard, Move) :-
 
 % move(+Move, +Board, -NewBoard).
 move(Move,GameState,NewGameState) :-
-    
     get_game_attributes(GameState, OctagonBoard, SquareBoard, Height, Width, P1Type, P2Type, Player, CutInfo), 
     validate_move(OctagonBoard, Move),
     board_insert_element_at(OctagonBoard, Move, Player, NewOctagonBoard),
@@ -93,9 +92,9 @@ get_diagonals_pos(X-Y, _, _, Res) :-
         XRight-YBottom
     ].
 
-update_squares(Player, X-Y, OctagonBoard, SquareBoard, NewSquareBoard, Height, Width, NumCuts) :-
-    get_diagonals_pos(X-Y, Height, Width, DiagonalsPos),
-    get_squares_pos(Player, OctagonBoard, X-Y, DiagonalsPos, SquaresPos),
+update_squares(Player, Pos, OctagonBoard, SquareBoard, NewSquareBoard, Height, Width, NumCuts) :-
+    get_diagonals_pos(Pos, Height, Width, DiagonalsPos),
+    get_squares_pos(Player, OctagonBoard, Pos, DiagonalsPos, SquaresPos),
     check_cut(Player, SquareBoard, SquaresPos, NumCuts),
     place_squares(Player, SquareBoard, SquaresPos, NewSquareBoard).
 
