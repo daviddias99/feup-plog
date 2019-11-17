@@ -57,7 +57,7 @@ greedy_move(GameState, BestMove) :-
 /**
 *   value(+GameState,-Value)
 *
-*   Evaluate the given gamestate. A boards value is determined by three factors. The first is the length of the largest sub-board where the player wins. This makes it so that
+*   Evaluate the given gamestate. A boards value is determined by three factors. The first is the length of the largest sub-board with a path between the margins. This makes it so that
 *   the bot has an incentive to build a path that unites the margins. The second factor is the length of the largest un-cuttable sub-board where the player wins. This factor is
 *   very similiar to the first one but it's meant to reward plays that don't lead to the possibility of receiving a cut. The last factor is the value of the next player's best-move.
 *   This factor calculates what the next player would play given the current gamestate and "devalues"(subtracts) the current Gamestate's value accordingly to deturn the bot from making favourable 
@@ -71,13 +71,13 @@ value(GameState, Value) :- !,
     get_real_side_lengths(PrevPlayer,DefaultWidth,DefaultHeight,Width,Height),
     orient_board(OctagonBoard, SquareBoard,PrevPlayer,OrientedOctagonBoard,OrientedSquareBoard),
 
-    % Get SBValue1 - Highest length of the sub-board in which Plaer wins the game
+    % Get SBValue1 - Highest length of the sub-board in which Player has a path between the margins
 
     % Build the connection graph
     build_graph([OrientedOctagonBoard, OrientedSquareBoard, Height, Width], PrevPlayer, Graph1),!,
     get_highest_sub_board_value(OrientedOctagonBoard,Width,Height,PrevPlayer,Graph1,SBValue1),
 
-    % Get SBValue2 - Highest length of the uncuttable sub-board in which Player wins the game
+    % Get SBValue2 - Highest length of the sub-board in which Player wins the game
 
     % Remove cuttable squares
     remove_cuttable_squares(OrientedOctagonBoard,OrientedSquareBoard,PrevPlayer,NewSquareBoard),

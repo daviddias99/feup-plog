@@ -7,7 +7,7 @@
 % - continue_game(+NewGameState) 
 % - game_loop(+GameState)
 % - get_move(+GameState,+Move)
-% - choose_move(+GameState,+Move)
+% - choose_move(+GameState,+Level,-Move)
 
 
 /**
@@ -74,7 +74,7 @@ get_move(GameState, Move) :-
     choose_move(GameState, Type, Move), !.
 
 /**
-*   choose_move(+GameState,+Level,+Move)
+*   choose_move(+GameState,+Level,-Move)
 *
 *   Given a Gamestate and it's move-limitations choose_move will prompt the user (if the current player type is a human player) or fetch the next
 *   move from the correct bot.
