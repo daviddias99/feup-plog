@@ -2,15 +2,16 @@
 
 %   In this file:
 % 
-% - random_move(+GameState,-Move)
-% - greedy_move(+GameState,-BestMove)
-% - value(+GameState,-Value)
-% - value_next(+GameState, -Value)
-% - get_highest_sub_board_value(+OctagonBoard,+Width,+Height,+Player,+Graph,-Value)
+% - play()
+% - get_players_type(+Option,-P1Type, -P2Type)
+% - continue_game(+NewGameState) 
+% - game_loop(+GameState)
+% - get_move(+GameState,+Move)
+% - choose_move(+GameState,+Move)
 
 
 /**
-*   play
+*   play()
 *   
 *   Main predicate that starts the game, displaying the menu screen and menu options.
 */
