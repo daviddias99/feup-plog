@@ -3,8 +3,8 @@ input_menu_option(Option) :-
 
 input_board_size(Height, Width) :-
     ansi_format([bold], ' > Choose board size ', [world]), nl,
-    ansi_format([bold], '\t> Height ', [world]), get_int(Height),
-    ansi_format([bold], '\t> Width ', [world]), get_int(Width).
+    repeat, ansi_format([bold], '\t> Height ', [world]), get_int(Height),
+    repeat, ansi_format([bold], '\t> Width ', [world]), get_int(Width), !.
     
 input_bot_level(Level) :-
     get_int_between(' > CPU level ', Level, 1, 2).
