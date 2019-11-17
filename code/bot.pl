@@ -11,6 +11,7 @@
 % - value(+GameState,-Value)
 % - value_next(+GameState, -Value)
 % - get_highest_sub_board_value(+OctagonBoard,+Width,+Height,+Player,+Graph,-Value)
+% - compute_next_player_value(+GameState, +ListOfMoves, -NextPlayerValue)
 
 /**
 *   Level-1 Bot - This bot chooses any of the possible moves given a gamestate
@@ -40,7 +41,7 @@ greedy_move(GameState, BestMove) :-
     valid_moves(GameState,ListOfMoves),
 
     % Find all pairs of valid moves and their corresponding values 
-    findall(Value-Move, (member(Move, ListOfMoves),move(Move, GameState, NewGameState), value(NewGameState, Value)), Result),
+    findall(Value-Move, (member(Move, ListOfMoves),move(Move, GameState, NewGameState), print(NewGameState), value(NewGameState, Value)), Result),
 
     % Sort the pairs Value-Move in descending order according to Value
     keysort(Result,SortedResultAsc),
@@ -90,16 +91,25 @@ value(GameState, Value) :- !,
     % Get all the valid moves
     valid_moves(GameState,ListOfMoves),
 
-    % Find all pairs of valid moves and their corresponding values. The difference between this segment and the similar segment in
-    % greedy_move(+GameState, -Move) is that this segment uses value_next(+GameState,Value) to obtain it's values. The essential difference
-    % is that value_next does not only values according to it's state and doesn't take the next player's move into account.
+    compute_next_player_value(GameState, ListOfMoves, NextPlayerValue),
+
+    Value is SBValue1 + SBValue2 - NextPlayerValue.
+
+/**
+* compute_next_player_value(+GameState, +ListOfMoves, -NextPlayerValue)
+*
+* Find all pairs of valid moves and their corresponding values. The difference between this segment and the similar segment 
+* in greedy_move(+GameState, -Move) is that this segment uses value_next(+GameState,Value) to obtain it's values. The
+* essential difference is that value_next does not only values according to it's state and doesn't take the next player's 
+* move into account.
+*/
+compute_next_player_value(_, [], 0).
+compute_next_player_value(GameState, ListOfMoves, NextPlayerValue) :-
     findall(Val-Move, (member(Move, ListOfMoves),move(Move, GameState, NewGameState), value_next(NewGameState, Val)), Result),
     keysort(Result,SortedResultAsc),
     reverse(SortedResultAsc,SortedResultDsc),
-    nth0(0,SortedResultDsc,NextPlayerValue-_),
+    nth0(0,SortedResultDsc,NextPlayerValue-_).
 
-
-    Value is SBValue1 + SBValue2 - NextPlayerValue.
 
 /**
 *   value_next(+GameState, -Value)
