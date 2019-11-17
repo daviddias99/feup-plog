@@ -42,7 +42,6 @@ check_for_win([OctagonBoard,SquareBoard,Height,Width | _] ,Player) :-
 
     remove_cuttable_squares(OctagonBoard, SquareBoard, Player, NewSquareBoard),
 
-
     % To allow for checking for both players, since the gameover predicates work form the top edge down, when the Player's number is equal to 2 and, as such,
     % his paths increase horizontally, the board must be transposed and the height/width must be switched.
     orient_board(OctagonBoard, NewSquareBoard,Player,OrientedOctagonBoard,OrientedSquareBoard),
