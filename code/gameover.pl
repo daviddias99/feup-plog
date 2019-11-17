@@ -5,7 +5,7 @@
 
 %   In this file:
 % 
-% -  gameover(+Board,-Player)
+% -  gameover(+Board,-Winner)
 % -  test_for_path(+Gamestate,+Player)
 % -  orient_board(+OctagonBoard,+SquareBoard,+Player,-OrientedOctagonBoard,-OrientedSquareBoard)
 % -  reachable_from_list(+Graph,+Starters,+Destinations)
@@ -16,19 +16,19 @@
 % -  is_cuttable(+OctagonBoard, +Player, +SquareX, +SquareY)
 
 /**
-*   gameover(+Board,-Player) 
+*   gameover(+Board,-Winner) 
 *
 *   Checks if the game is over, if so returns the player that won.
 */
 
     
-gameover(GameState,Player) :- 
-    get_game_previous_player(GameState,Player),
-    check_for_win(GameState, Player).
+gameover(GameState,Winner) :- 
+    get_game_previous_player(GameState,Winner),
+    check_for_win(GameState, Winner).
 
-gameover(GameState,Player) :- 
+gameover(GameState,Winner) :- 
     valid_moves(GameState,[]),
-    Player = 0.
+    Winner = 0.
 
 /**
 *   check_for_win(+Gamestate, +Player)   
