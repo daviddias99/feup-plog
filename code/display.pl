@@ -40,7 +40,15 @@ display_cut_message(_).
 display_gameover([OctagonBoard, SquareBoard, Height, Width | _], Player) :-
     display_horizontal_coordinates(a, Width), nl, 
     display_board(OctagonBoard, SquareBoard, 0, Height, Width), nl, nl,
+    display_gameover_message(Player), nl, nl.
+
+
+display_gameover_message(0) :-
+    ansi_format([bold], 'GAME DRAW.', [world]).
+
+display_gameover_message(Player) :-
     ansi_format([bold], 'PLAYER ', [world]), write_player(Player), ansi_format([bold], ' WON!', [world]).
+
 
 write_player(1) :- ansi_format([bold, fg(blue)], 1, [world]).
 write_player(2) :- ansi_format([bold, fg(red)], 2, [world]).

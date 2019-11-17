@@ -66,7 +66,7 @@ press_enter_to_continue :-
     ansi_format([bold], 'Press ', [world]),
     ansi_format([bold, fg(green)], '<ENTER>', [world]),
     ansi_format([bold], ' to continue.', [world]),
-    wait_for_enter.
+    wait_for_enter, nl, nl.
 
 wait_for_enter :- get_char('\n'), !.
 wait_for_enter :- get_char(_), wait_for_enter. 
