@@ -1,4 +1,4 @@
-:- [display], [input], [game_model], [game_logic], [gameover], [bot]. 
+:- [display], [input], [game_model], [move], [gameover], [bot]. 
 
 init_board([[
              [0, 0, 0, 1, 0, 0, 2, 0],

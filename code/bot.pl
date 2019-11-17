@@ -1,4 +1,4 @@
-:- ensure_loaded('game_logic.pl').
+:- ensure_loaded('move.pl').
 :- ensure_loaded('game_model.pl').
 :- ensure_loaded('graph.pl').
 :- ensure_loaded('gameover.pl').
