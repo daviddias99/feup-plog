@@ -17,13 +17,13 @@
 */
 play :-
     display_main_screen,
-    input_menu_option(Option),
+    input_menu_option(Option), !,
     start_game(Option).
 
 start_game(0).
 start_game(Option) :-
     get_players_type(Option, P1Type, P2Type),
-    repeat, input_board_size(Width,Height), generate_initial_game_state(Height, Width, P1Type, P2Type, GameState), !,
+    repeat, input_board_size(Height, Width), generate_initial_game_state(Height, Width, P1Type, P2Type, GameState), !,
     game_loop(GameState),
     press_enter_to_continue,
     play.
@@ -61,7 +61,7 @@ continue_game(NewGameState) :-
 */
 game_loop(GameState) :-
     display_game(GameState), 
-    repeat, get_move(GameState, Move), move(Move, GameState, NewGameState), !,
+    repeat, get_move(GameState, Move), move(Move, GameState, NewGameState),
     continue_game(NewGameState).
 
 /**
@@ -71,7 +71,7 @@ game_loop(GameState) :-
 */
 get_move(GameState, Move) :-
     get_game_current_player_type(GameState, Type),
-    choose_move(GameState, Type, Move).
+    choose_move(GameState, Type, Move), !.
 
 /**
 *   choose_move(+GameState,+Move)
@@ -85,25 +85,25 @@ choose_move(GameState, 'P', Move) :-
 
 choose_move(GameState, 1, Move) :-
     random_move(GameState, Move),
-    write('CHOSEN MOVE: '), write(Move), nl,
+    display_cpu_choice(Move),
     press_enter_to_continue.
 
 choose_move(GameState, 2, Move) :-
     greedy_move(GameState, Move),
-    write('CHOSEN MOVE: '), write(Move), nl,
+    display_cpu_choice(Move),
     press_enter_to_continue.
 
 
 init_game_state([
-     [[1, 2, 2, 2], 
-      [2, 1, 2, 1],
-      [0, 2, 1, 1],
-      [2, 1, 1, 1]],
+     [[1, 0, 0, 0], 
+      [0, 0, 0, 0],
+      [0, 0, 2, 0],
+      [0, 0, 0, 0]],
      [[0, 1, 1, 1, 0], 
       [2, 1, 2, 2, 2],
       [2, 2, 2, 1, 2],
       [2, 2, 1, 1, 2],
       [0, 1, 1, 1, 0]],
-      4, 4, 2, 2, 2, 1-0]).
+      4, 4, 'P', 2, 1, 1-0]).
 
-test(M) :- init_game_state(GS), greedy_move(GS, M).
+test(NewGameState) :- init_game_state(GameState), repeat, get_move(GameState, Move), move(Move, GameState, NewGameState).
