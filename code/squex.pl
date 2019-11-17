@@ -18,7 +18,7 @@ play() :-
     display_main_screen,
     input_menu_option(Option),
     get_players_type(Option, P1Type, P2Type),
-    repeat, input_board_size(Height, Width), generate_initial_game_state(Height, Width, P1Type, P2Type, GameState), !,
+    repeat, input_board_size(Width,Height), generate_initial_game_state(Height, Width, P1Type, P2Type, GameState), !,
     game_loop(GameState).
 
 /**
