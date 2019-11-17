@@ -36,7 +36,7 @@ int_to_letter(Letter, Int) :- Code is Int + 97, char_code(Letter, Code).
 display_game([OctagonBoard, SquareBoard, Height, Width, _, _, Player, CutHappened |[]]) :-
     display_cut_message(CutHappened), nl, nl,
     display_horizontal_coordinates(a, Width), nl, 
-    display_board(OctagonBoard, SquareBoard, 0, Height, Width), nl, nl,
+    display_board(OctagonBoard, SquareBoard, 0, Height, Width), nl,
     display_turn_message(Player, Width), nl.
 
 display_cut_message(2-1) :-
@@ -47,12 +47,13 @@ display_cut_message(2-1) :-
 display_cut_message(_).
 
 display_box_message(Msg, MsgLength, Width) :- 
+    MsgLength < Width * 8,
     display_box_top(Width, Width),
     display_box_middle(Msg, MsgLength, Width),
     display_box_bottom(Width, Width).
 
 display_turn_message(Player, Width) :-
-    display_box_message((ansi_format([bold], 'PLAYER ', [world]), write_player(Player), ansi_format([bold], '\'S TURN', [world])), 14, Width).
+    display_box_message((ansi_format([bold], 'PLAYER ', [world]), write_player(Player), ansi_format([bold], '\'s TURN', [world])), 14, Width).
 
 /**
 *   display_gameover(+GameState)
@@ -107,12 +108,14 @@ display_board([], [SquareRow | SquareBoard], Y, Height, Width) :-
     display_board([], SquareBoard, YNext, Width, Height).
 display_board([OctagonRow | OctagonBoard], [SquareRow | SquareBoard], Y, Height, Width) :-
     display_square_row_borders(SquareRow, Y, Height, Width), nl,
-    ansi_format(bold, Y, [world]), write(' '),  
+    display_y_coord(Y),  
     display_octagon_hor_separator(), 
     display_octagon_row(OctagonRow), nl,
     YNext is Y + 1,
     display_board(OctagonBoard, SquareBoard, YNext, Height, Width).
 
+display_y_coord(Y) :- Y >= 10, !, ansi_format(bold, Y, [world]).
+display_y_coord(Y) :- ansi_format(bold, Y, [world]), write(' ').
 
 % display pieces
 
