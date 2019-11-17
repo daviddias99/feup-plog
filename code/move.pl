@@ -8,11 +8,14 @@ validate_move(OctagonBoard, Move) :-
     board_get_element_at(OctagonBoard, Move, 0).
 
 % move(+Move, +Board, -NewBoard).
-move(Move, [OctagonBoard, SquareBoard, Height, Width, P1Type, P2Type, Player, CutInfo | []], [NewOctagonBoard, NewSquareBoard, Height, Width, P1Type, P2Type, NewPlayer, NewCutInfo | []]) :-
+move(Move,GameState,NewGameState) :-
+    
+    get_game_attributes(GameState, OctagonBoard, SquareBoard, Height, Width, P1Type, P2Type, Player, CutInfo), 
     validate_move(OctagonBoard, Move),
     board_insert_element_at(OctagonBoard, Move, Player, NewOctagonBoard),
     update_squares(Player, Move, OctagonBoard, SquareBoard, NewSquareBoard, Height, Width, NumCuts),
-    update_next_player(Player, CutInfo, NewPlayer, NewCutInfo, NumCuts).
+    update_next_player(Player, CutInfo, NewPlayer, NewCutInfo, NumCuts),
+    get_game_attributes(NewGameState, NewOctagonBoard, NewSquareBoard, Height, Width, P1Type, P2Type, NewPlayer, NewCutInfo).
 
 update_next_player(1, _, 2, 2-1, NumCuts) :- NumCuts > 0.
 update_next_player(2, _, 1, 2-1, NumCuts) :- NumCuts > 0.
