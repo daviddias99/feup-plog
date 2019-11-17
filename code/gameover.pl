@@ -20,9 +20,15 @@
 *
 *   Checks if the game is over, if so returns the player that won.
 */
+
+    
 gameover(GameState,Player) :- 
     get_game_previous_player(GameState,Player),
     check_for_win(GameState, Player).
+
+gameover(GameState,Player) :- 
+    valid_moves(GameState,[]),
+    Player = 0.
 
 /**
 *   check_for_win(+Gamestate, +Player)   
