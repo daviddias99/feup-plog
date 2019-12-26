@@ -1,0 +1,22 @@
+obra:
+    - preço contratado
+    - prazo limite (dias de trabalho)
+        . Bonus se antes (por dia)                 
+        . Penalização se depois (por dia)
+
+    - requer:
+        [] operações de especialidade:
+            possuem:
+                . duração prevista (tempo de duração para uma pessoa)
+                . duração diminui conforme recursos humanos alocados
+                
+            necessitam de:
+                . materiais/equipamentos -> custos
+                . trabalhadores especializados
+                . pelo menos um trabalhador de especialidade
+                
+        [] trabalhadores:
+            possuem:
+                . zero ou mais especialidades
+                . salário (custo por dia) (mais elevado para especialistas)
+
