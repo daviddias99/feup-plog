@@ -5,18 +5,18 @@ especialidades([carpinteiro, picheleiro, canalizador, telhados, jardineiro]).
 
 trabalhadores([
     %[salario, [especialidades]]
-    [20, []],
-    [50, [carpinteiro, picheleiro]],
-    [60, [canalizador]],    
-    [30, [jardineiro]]
+    [20, [0, 0, 0, 0, 0]],
+    [50, [1, 1, 0, 0, 0]],
+    [60, [0, 0, 1, 0, 0]],    
+    [30, [0, 0, 0, 0, 1]]
 ]).
 
 operacoes([
     %[id, especialidade, tempo, custoEquipamentos, ]
-    [1, carpinteiro, 3, 20],
-    [2, picheleiro, 1, 20],
-    [3, canalizador, 10, 20],
-    [4, jardineiro, 2, 20]
+    [1, [1, 0, 0, 0, 0], 3, 20],
+    [2, [0, 1, 0, 0, 0], 1, 20],
+    [3, [0, 0, 1, 0, 0], 10, 20],
+    [4, [0, 0, 0, 0, 1], 2, 20]
 ]).
 
 precedencias([
@@ -32,23 +32,31 @@ dostuff(Vars) :-
     operacoes(Ops),
     precedencias(Prec),
     obra([Custo, Duracao, Bonus]),
-    initTasks(Ops, Tasks),
+    length(T, Nworkers),
+    initTasks(Ops, Tasks, Nworkers),
     print(Tasks),
-    initWorkers(T, Capacities),
-    print(Capacities),
-    multi_cumulative(Tasks, Capacities, []),
+    cumulative(Tasks, [limit(Nworkers)]),
+    initTasksWorkersMatrix(Ops, Tasks, Matrix, W, Nworkers),
     getVars(Tasks, Vars),
     labeling([], Vars).
 
-initTasks([], []).
-initTasks([[ID, _Esp, Di | _] | RestOps], [task(Oi, Di, Ei, Hsi, ID) | RestTasks]) :-
-    %length(Hsi, Length), NewDi #= Di + Length,  
-    length(Hsi, 4),
-    domain(Hsi, 0, 1),
-    domain([Oi, Ei], 0, 50),
-    initTasks(RestOps, RestTasks).
+initTasks([], [], _).
+initTasks([[ID, _Esp, Dbase | _] | RestOps], [task(Oi, Di, Ei, Hi, ID) | RestTasks], Nworkers) :-
+    domain([Ei, Oi], 0, 100),
+    Di in 1..Dbase,
+    Hi in 1..Nworkers,
+    Di #= Dbase / Hi,
+    initTasks(RestOps, RestTasks, Nworkers).
 
-initWorkers([], []).
-initWorkers([_ | RestWorkers], [cumulative(1) | RestCumulative]) :- initWorkers(RestWorkers, RestCumulative). 
+getVars([], []).    
+getVars([task(Oi, Di, Ei, Hi, _) | Tasks], [Oi, Di, Ei, Hi | Vars]) :- getVars(Tasks, Vars). 
 
-getVars([task(Oi, Di, Ei, Hsi, _) | Tasks], [Oi, Di, Ei | Vars]) :- getVars(Tasks, SubVars), append(Hsi, SubVars, Vars). 
+
+initTasksWorkersMatrix([], [], [], _).
+initTasksWorkersMatrix([[_ID, Esp, _Dbase, _Custo] | Ops], [task(_Oi, _Di, _Ei, Hi, _ID) | Tasks], [NewRow | Matrix], Workers, Nworkers) :-
+    length(NewRow, Nworkers),
+    domain(NewRow, 0, 1),
+    sum(NewRow, #=, Hi),
+    atLeastOneSpecialty(NewRow, )
+    initTasksWorkersMatrix(Ops, Tasks, Workers, Nworkers).
+
