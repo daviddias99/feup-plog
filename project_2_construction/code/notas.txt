@@ -14,8 +14,48 @@ obra:
                 . materiais/equipamentos -> custos
                 . trabalhadores especializados
                 . pelo menos um trabalhador de especialidade
-                
+
         [] trabalhadores:
             possuem:
                 . zero ou mais especialidades
                 . salário (custo por dia) (mais elevado para especialistas)
+
+
+--- IDEIA PARA RESOLUÇÂO DE PROBLEMA DE UMA OBRA ---
+
+Restrições:
+
+1- cumulative para decidir quantos trabalhadores usar em cada tarefa (Ti):
+    - task(Oi, Di, Ei, Hi, Mi) :
+        . Oi = indefinido;
+        . Di = duração base da tarefa / Hi;
+        . Ei = indefinido;
+        . Hi = indefinido;
+        . Ti = id da tarefa;
+    - limit(L) com L = numero total de trabalhadores (NTrabalhadores)
+    - precedences de acordo com as precedencias definidas
+    - Para cada tarefa T ficamos com NTrabalhadores_i
+2- Por cada tarefa, criar um vetor (TrabalhadoresTi) com tamanho igual a nº total de trabalhadores (NTrabalhadores);
+3- Definir que sum de TrabalhadoresTi é igual a NTrabalhadores_i
+4- Para todo i != j se (Oi,Ei) interseta (Oj,Ej)  então o produto escalar de TrabalhadoresTi e TrabalhadoresTj tem de ser 0.
+5- Para todo vetor TrabalhadoresTi assegurar que existe pelo menos um trabalhador cuja especialidade é a especialidade de Ti
+6- Função de lucro (maximizar):
+    - (+) preço contratado
+    - (-) para cada tarefa, custo dos seus materiais e equipamentos
+    - (-) para cada tarefa (Ti), para cada trabalhador usado(T), salario(T) * Di
+    - (+) bonus * (PrazoLimite - max(Ei))
+
+Resultado:
+
+    - Custo Total 
+    - Para cada tarefa: Inicio, Fim e trabalhadores usados
+
+Domínios:
+
+    MaxDays = PrazoLimite + PreçoContratado / Bonus  (Possibilidade não muito boa mas ja é qql coisa)
+
+    0 <= Oi <= MaxDays
+    0 <= Ei <= MaxDays
+    1 <= Ei - Oi <= Di  
+    1 <= Di <= Duração base
+    1 <= Hi <= NTrabalhadores
