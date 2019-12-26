@@ -5,7 +5,7 @@ especialidades([carpinteiro, picheleiro, canalizador, telhados, jardineiro]).
 
 trabalhadores([
     %[salario, [especialidades]]
-    [20, [0, 0, 0, 0, 0]],
+    [20, [0, 0, 1, 0, 0]],
     [50, [1, 1, 0, 0, 0]],
     [60, [0, 0, 1, 0, 0]],    
     [30, [0, 0, 0, 0, 1]]
@@ -57,6 +57,17 @@ initTasksWorkersMatrix([[_ID, Esp, _Dbase, _Custo] | Ops], [task(_Oi, _Di, _Ei, 
     length(NewRow, Nworkers),
     domain(NewRow, 0, 1),
     sum(NewRow, #=, Hi),
-    atLeastOneSpecialty(NewRow, )
+    atLeastOneSpecialty(1, NewRow, Esp, Workers),
     initTasksWorkersMatrix(Ops, Tasks, Workers, Nworkers).
+
+atLeastOneSpecialty(I, NewRow, Specialty, Workers) :-
+    specialtyList(Specialty, Workers, SpecialtyList),
+    scalar_product(SpecialtyList, NewRow, #>, 0).
+
+specialtyList(_, [], []).
+specialtyList(Specialty, [[_, WorkerSpecialties] | Workers], [B | List]) :-
+    scalar_product_reif(WorkerSpecialties, Specialty, #>, 0, B),
+    specialtyList(Specialty, Workers, List).
+
+
 
