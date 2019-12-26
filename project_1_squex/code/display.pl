@@ -13,8 +13,16 @@
 % display_octagon_row(+Row)
 % display_square_row_borders(+Row, +CurrentY, +Height, +Width)
 % display_square_row(+Row)
+% display_cpu_choice(+Move)
+% display_box_message(+Msg, +MsgLength, +Width)
+% display_turn_message(+Player, +Width)
 
 
+/**
+*   display_cpu_choice(+Move)
+*
+*   Displays the move chosen by the CPU
+*/
 display_cpu_choice(X-Y) :-
     ansi_format([bold], '> CPU move ', [world]),
     int_to_letter(Letter, X),
@@ -46,12 +54,23 @@ display_cut_message(2-1) :-
 
 display_cut_message(_).
 
+/**
+*   display_box_message(+Msg, +MsgLength, +Width)
+*
+*   Displays a box with with a given width with a message centered inside
+*/
 display_box_message(Msg, MsgLength, Width) :- 
     MsgLength < Width * 8,
     display_box_top(Width, Width),
     display_box_middle(Msg, MsgLength, Width),
     display_box_bottom(Width, Width).
 
+
+/**
+* display_turn_message(+Player, +Width)
+*
+* Displays info about which player will play next in a box with a given width
+*/
 display_turn_message(Player, Width) :-
     display_box_message((ansi_format([bold], 'PLAYER ', [world]), write_player(Player), ansi_format([bold], '\'s TURN', [world])), 14, Width).
 

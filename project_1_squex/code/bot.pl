@@ -46,7 +46,6 @@ greedy_move(GameState, BestMove) :-
     % Sort the pairs Value-Move in descending order according to Value
     keysort(Result,SortedResultAsc),
     reverse(SortedResultAsc,SortedResultDsc),
-    print(SortedResultDsc),
 
     % Get the moves that lead to the best value and randomly choose one of them
     group_pairs_by_key(SortedResultDsc, [_-BestMoves|_]),
