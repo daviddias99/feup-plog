@@ -19,4 +19,3 @@ obra:
             possuem:
                 . zero ou mais especialidades
                 . salário (custo por dia) (mais elevado para especialistas)
-
