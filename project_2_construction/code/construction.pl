@@ -16,9 +16,13 @@ dostuff(Vars) :-
     length(Workers, Nworkers),
     initTasks(Ops, Operations, Tasks, Nworkers),
     getTaskPrecedences(Obras, Prec, Operations, [], Ps),
+    getPrecendenceVars(Ps,PrecedenceVars),
+    [TestVar] = PrecedenceVars,
+    TestVar #=< -5,
 
     % Restriction #1
     cumulative(Tasks, [limit(Nworkers), precedences(Ps)]),
+    print(Ps),
     
     % Restriction #2, #3 and #4
     initTasksWorkersMatrix(Ops, Tasks, Matrix, Workers, Nworkers, Specialties),
@@ -33,8 +37,10 @@ dostuff(Vars) :-
     getVars(Tasks, Vars),
     flattenMatrix(Matrix,FlatMatrix,[]),
     append(Vars,FlatMatrix,FinalVars),
+    append(FinalVars,PrecedenceVars,FinalFinalVars),
     %append(FinalVars,[Profit],FinalFinalVars),
-    labeling([], FinalVars),
+    labeling([], FinalFinalVars),
+    write(FinalFinalVars),
     write(Tasks), write('\n'),write(Matrix),write('\n'),% write(Profit),
     told.
 
@@ -48,6 +54,11 @@ initTasks([[ID, IDobra, Esp, Dbase | _] | RestInput], [[ID, IDobra, Esp, Dbase, 
 
 getVars([], []).    
 getVars([task(Oi, Di, Ei, Hi, ID) | Tasks], [Oi, Di, Ei, Hi, ID| Vars]) :- getVars(Tasks, Vars). 
+
+getPrecendenceVars([],[]). 
+
+getPrecendenceVars([_-_#=Var|T1],[Var|T2]) :-
+    getPrecendenceVars(T1,T2). 
 
 initTasksWorkersMatrix([], [], [], _, _, _).
 initTasksWorkersMatrix([[_ID, _IDobra, Esp, _Dbase, _Custo] | Ops], [task(_Oi, _Di, _Ei, Hi, _ID) | Tasks], [NewRow | Matrix], Workers, Nworkers, Specialties) :-
@@ -168,7 +179,7 @@ getTaskPrecedences([[IDobra | _] | Obras], Prec, Ops, Acc, Result) :-
     getTaskPrecedences(Obras, Prec, Ops, Acc1, Result).
 
 getConstructionTaskPrecedences(Precs, Ops, ConstructionPrec) :-
-    findall(IDafter-IDbefore #= Dij, (member(Before-After, Precs), Op1 = [IDbefore, _, Before, _, _, Di | _], Op2 = [IDafter, _, After | _], member(Op1, Ops), member(Op2, Ops), Dij #>= Di), ConstructionPrec).
+    findall(IDbefore-IDafter #= Dij, (member(Before-After, Precs), Op1 = [IDbefore, _, Before, _, _, Di | _], Op2 = [IDafter, _, After | _], member(Op1, Ops), member(Op2, Ops)), ConstructionPrec).
 
 createSpecialtyVector(_, [], []).
 
