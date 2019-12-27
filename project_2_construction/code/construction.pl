@@ -30,31 +30,34 @@ obra([150, 10, 10]).
 dostuff(Vars) :-
     tell('file.txt'),
     % Fetch variables
-    trabalhadores(T),
+    trabalhadores(Workers),
     operacoes(Ops),
     precedencias(Prec),
     obra([Custo, Duracao, Bonus]),
 
     % Init tasks
-    length(T, Nworkers),
+    length(Workers, Nworkers),
     initTasks(Ops, Tasks, Nworkers),
 
     % Restriction #1
     cumulative(Tasks, [limit(Nworkers)]),
     
     % Restriction #2, #3 and #4
-    initTasksWorkersMatrix(Ops, Tasks, Matrix, T, Nworkers),
+    initTasksWorkersMatrix(Ops, Tasks, Matrix, Workers, Nworkers),
 
     % Resticton #5
     transpose(Matrix,TransposedMatrix),
     imposeNoOverLaps(Tasks,TransposedMatrix),
 
+    calculateProfit(Tasks,Ops,Workers,Matrix,[Custo, Duracao, Bonus],Profit),
+
     % Solution search
     getVars(Tasks, Vars),
     flattenMatrix(Matrix,FlatMatrix,[]),
     append(Vars,FlatMatrix,FinalVars),
-    labeling([], FinalVars),
-    write(Tasks), write('\n'),write(Matrix),
+    append(FinalVars,[Profit],FinalFinalVars),
+    labeling([maximize(Profit)], FinalFinalVars),
+    write(Tasks), write('\n'),write(Matrix),write('\n'), write(Profit),
     told.
 
 initTasks([], [], _).
@@ -131,3 +134,47 @@ flattenMatrix([],Result,Result).
 flattenMatrix([H|T],Result,Acc) :-
     append(Acc,H,Acc1),
     flattenMatrix(T,Result,Acc1).
+
+
+% Calculate profit
+
+calculateProfit(Tasks, Ops, Workers,WorkersMatrix, [Custo, Duracao, Bonus], Profit) :-
+
+    TempProfit1 is Custo,
+    getResourceCost(Ops,ResourceCost,0),
+    TempProfit2 is TempProfit1 - ResourceCost,
+    getSalariesCost(Tasks,Workers,WorkersMatrix,SalariesCost,0,EndTimes,[]),
+    TempProfit3 #= TempProfit2 - SalariesCost,
+    maximum(Max,EndTimes),
+    Profit #= TempProfit3 + Bonus * (Duracao - Max).
+
+
+getResourceCost([],ResourceCost,ResourceCost).
+
+getResourceCost([H|T],ResourceCost,Acc) :-
+
+    H = [_ID, _Spec, _BaseTime, Cost],
+    Acc1 is Acc + Cost,
+    getResourceCost(T,ResourceCost,Acc1). 
+
+getSalariesCost([],_,_,SalariesCost,SalariesCost,EndTimes,EndTimes).
+getSalariesCost([task(Oi, Di, Ei, Hi, ID)|T], Workers, [TaskWorkers|WorkersMatrix],SalariesCost,SalaryAcc,EndTimes,EndTimesAcc) :-
+    getTaskSalaryCost(Di,Workers,TaskWorkers,TaskSalary,0,1),
+    SalaryAcc1 #= SalaryAcc + TaskSalary,
+    append(EndTimesAcc,[Ei],EndTimesAcc1),
+    getSalariesCost(T,Workers,WorkersMatrix,SalariesCost,SalaryAcc1,EndTimes,EndTimesAcc1).
+
+
+getTaskSalaryCost(_,_,[],TaskSalary,TaskSalary,_).
+
+getTaskSalaryCost(Di,Workers, [1|T], TaskSalary, Acc, Index) :-
+
+    nth1(Index, Workers,[WorkerSalary, _]),
+    Acc1 #= Acc + WorkerSalary * Di,
+    NewIndex is Index + 1,
+    getTaskSalaryCost(Di,Workers,T,TaskSalary,Acc1,NewIndex).
+
+getTaskSalaryCost(Di,Workers, [0|T], TaskSalary, Acc, Index) :-
+
+    NewIndex is Index + 1,
+    getTaskSalaryCost(Di,Workers,T, TaskSalary,Acc,NewIndex).
