@@ -20,8 +20,6 @@ dostuff(Vars) :-
     
     getPrecendenceVars(Ps,PrecedenceVars),
     
-    [TestVar] = PrecedenceVars,
-    TestVar #=< 5,
 
     % Restriction #1
     cumulative(Tasks, [limit(Nworkers), precedences(Ps)]),
@@ -34,20 +32,20 @@ dostuff(Vars) :-
     transpose(Matrix,TransposedMatrix),
     imposeNoOverLaps(Tasks,TransposedMatrix),
 
-    %calculateProfit(Tasks,Ops,Workers,Matrix,[Custo, Duracao, Bonus],Profit),
+    calculateProfit(Tasks,Operations,Workers,Matrix,[Custo, Duracao, Bonus],Profit),
 
     % Solution search
     getVars(Tasks, Vars),
     flattenMatrix(Matrix,FlatMatrix,[]),
     append(Vars,FlatMatrix,FinalVars),
     append(FinalVars,PrecedenceVars,FinalFinalVars),
-    %append(FinalVars,[Profit],FinalFinalVars),
-    labeling([], FinalFinalVars),
-    write(Tasks), write('\n'),write(Matrix),write('\n'),% write(Profit),
+    append(FinalVars,[Profit],FinalFinalFinalVars),
+    labeling([maximize(Profit)], FinalFinalFinalVars),
+    write(Tasks), write('\n'),write(Matrix),write('\n'), write(Profit),
     told.
 
 initTasks([], [], [], _).
-initTasks([[ID, IDobra, Esp, Dbase | _] | RestInput], [[ID, IDobra, Esp, Dbase, Oi, Di, Ei, Hi] | RestOps], [task(Oi, Di, Ei, Hi, ID) | RestTasks], Nworkers) :-
+initTasks([[ID, IDobra, Esp, Dbase, Custo | _] | RestInput], [[ID, IDobra, Esp, Dbase, Custo, Oi, Di, Ei, Hi] | RestOps], [task(Oi, Di, Ei, Hi, ID) | RestTasks], Nworkers) :-
     domain([Ei, Oi], 0, 100),
     Di in 1..Dbase,
     Hi in 1..Nworkers,
@@ -128,49 +126,6 @@ flattenMatrix([H|T],Result,Acc) :-
     flattenMatrix(T,Result,Acc1).
 
 
-% Calculate profit
-
-calculateProfit(Tasks, Ops, Workers,WorkersMatrix, [Custo, Duracao, Bonus], Profit) :-
-
-    TempProfit1 is Custo,
-    getResourceCost(Ops,ResourceCost,0),
-    TempProfit2 is TempProfit1 - ResourceCost,
-    getSalariesCost(Tasks,Workers,WorkersMatrix,SalariesCost,0,EndTimes,[]),
-    TempProfit3 #= TempProfit2 - SalariesCost,
-    maximum(Max,EndTimes),
-    Profit #= TempProfit3 + Bonus * (Duracao - Max).
-
-
-getResourceCost([],ResourceCost,ResourceCost).
-
-getResourceCost([H|T],ResourceCost,Acc) :-
-
-    H = [_ID, _Spec, _BaseTime, Cost],
-    Acc1 is Acc + Cost,
-    getResourceCost(T,ResourceCost,Acc1). 
-
-getSalariesCost([],_,_,SalariesCost,SalariesCost,EndTimes,EndTimes).
-getSalariesCost([task(Oi, Di, Ei, Hi, ID)|T], Workers, [TaskWorkers|WorkersMatrix],SalariesCost,SalaryAcc,EndTimes,EndTimesAcc) :-
-    getTaskSalaryCost(Di,Workers,TaskWorkers,TaskSalary,0,1),
-    SalaryAcc1 #= SalaryAcc + TaskSalary,
-    append(EndTimesAcc,[Ei],EndTimesAcc1),
-    getSalariesCost(T,Workers,WorkersMatrix,SalariesCost,SalaryAcc1,EndTimes,EndTimesAcc1).
-
-
-getTaskSalaryCost(_,_,[],TaskSalary,TaskSalary,_).
-
-getTaskSalaryCost(Di,Workers, [1|T], TaskSalary, Acc, Index) :-
-
-    nth1(Index, Workers,[WorkerSalary, _]),
-    Acc1 #= Acc + WorkerSalary * Di,
-    NewIndex is Index + 1,
-    getTaskSalaryCost(Di,Workers,T,TaskSalary,Acc1,NewIndex).
-
-getTaskSalaryCost(Di,Workers, [0|T], TaskSalary, Acc, Index) :-
-
-    NewIndex is Index + 1,
-    getTaskSalaryCost(Di,Workers,T, TaskSalary,Acc,NewIndex).
-
 
     
 getTaskPrecedences([], _, _, Result, Result).
@@ -197,3 +152,61 @@ createSpecialtyVector(Specialty, [Specialty | Specialties], [1|T]) :- !,
 
 createSpecialtyVector(Specialty,[_|Specialties],[0|T]) :- !,
     createSpecialtyVector(Specialty,Specialties,T).
+
+
+
+% Calculate profit
+
+calculateProfit(Tasks, Ops, Workers,WorkersMatrix, [Custo, Duracao, Bonus], Profit) :-
+    getResourceCost(Ops,ResourceCost,0),
+    TempProfit2 is 0 - ResourceCost,
+    getSalariesCost(Tasks,Workers,WorkersMatrix,SalariesCost,0,EndTimes,[]),
+    TempProfit3 #= TempProfit2 - SalariesCost,
+    maximum(Max,EndTimes),
+    getConstructionsPayment(Constructions, Ops, Payment),
+    Profit #= TempProfit3 + Payment.
+
+getConstructionsPayment([], _, 0).
+getConstructionsPayment([CurrentConstruction | Constructions], Ops, Payment) :-
+    computeConstructionPayment(CurrentConstruction, Ops, CurrentPayment),
+    getConstructionsPayment(Constructions, Ops, SubPayment),
+    Payment #= CurrentPayment + SubPayment.
+
+computeConstructionPayment([ID, Value, ExpectedDuration, BonusFee], Ops, Payment) :-
+    findall(OperationStart, member([_, ID, _, _, _, OperationStart |_], Ops), StartTimes),
+    minimum(Start, StartTimes),
+    findall(OperationEnd, member([_, ID, _, _, _, _, _, OperationEnd |_], Ops), EndTimes),
+    maximum(End, EndTimes),
+    Duration #= End - Start,
+    Payment #= Value + BonusFee * (ExpectedDuration - Duration).
+
+getResourceCost([],ResourceCost,ResourceCost).
+
+getResourceCost([H|T],ResourceCost,Acc) :-
+
+    H = [_ID, _ConstuctionID, _Spec, _BaseTime, Cost | _],
+    Acc1 is Acc + Cost,
+    getResourceCost(T,ResourceCost,Acc1). 
+
+getSalariesCost([],_,_,SalariesCost,SalariesCost,EndTimes,EndTimes).
+getSalariesCost([task(Oi, Di, Ei, Hi, ID)|T], Workers, [TaskWorkers|WorkersMatrix],SalariesCost,SalaryAcc,EndTimes,EndTimesAcc) :-
+    getTaskSalaryCost(Di,Workers,TaskWorkers,TaskSalary,0,1),
+    SalaryAcc1 #= SalaryAcc + TaskSalary,
+    append(EndTimesAcc,[Ei],EndTimesAcc1),
+    getSalariesCost(T,Workers,WorkersMatrix,SalariesCost,SalaryAcc1,EndTimes,EndTimesAcc1).
+
+
+getTaskSalaryCost(_,_,[],TaskSalary,TaskSalary,_).
+
+getTaskSalaryCost(Di,Workers, [1|T], TaskSalary, Acc, Index) :-
+
+    nth1(Index, Workers,[WorkerSalary, _]),
+    Acc1 #= Acc + WorkerSalary * Di,
+    NewIndex is Index + 1,
+    getTaskSalaryCost(Di,Workers,T,TaskSalary,Acc1,NewIndex).
+
+getTaskSalaryCost(Di,Workers, [0|T], TaskSalary, Acc, Index) :-
+
+    NewIndex is Index + 1,
+    getTaskSalaryCost(Di,Workers,T, TaskSalary,Acc,NewIndex).
+

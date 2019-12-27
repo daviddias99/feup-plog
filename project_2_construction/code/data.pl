@@ -10,10 +10,10 @@ trabalhadores([
 
 operacoes([
     %[id, idObra, especialidade, tempo, custoEquipamentos]
-    [1, 1, 'Pichelaria', 10, 20],
-    [2, 1, 'Carpintaria', 1, 20],
-    [3, 2, 'Canalização', 10, 20],
-    [4, 2, 'Jardinagem', 2, 20]
+    [1, 1, 'Pichelaria', 10, 25],
+    [2, 1, 'Carpintaria', 1, 25],
+    [3, 2, 'Canalização', 10, 25],
+    [4, 2, 'Jardinagem', 2, 25]
 ]).
 
 precedencias([
@@ -22,6 +22,6 @@ precedencias([
 
 obras([
     %[id, preco, duracao, bonus]
-    [1, 150, 10, 10],
-    [2, 300, 15, 50]
+    [1, 50, 10, 0],
+    [2, 30, 15, 0]
 ]).
