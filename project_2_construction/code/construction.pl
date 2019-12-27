@@ -1,31 +1,7 @@
 :- use_module(library(clpfd)).
 :- use_module(library(lists)).
 
-especialidades([carpinteiro, picheleiro, canalizador, telhados, jardineiro]).
-
-trabalhadores([
-    %[salario, [especialidades]]
-    [20, [0, 0, 1, 0, 0]],
-    [50, [1, 1, 0, 0, 0]],
-    [60, [0, 0, 1, 0, 0]],    
-    [30, [0, 0, 0, 0, 1]]
-]).
-
-operacoes([
-    %[id, especialidade, tempo, custoEquipamentos, ]
-    [1, [1, 0, 0, 0, 0], 3, 20],
-    [2, [0, 1, 0, 0, 0], 1, 20],
-    [3, [0, 0, 1, 0, 0], 10, 20],
-    [4, [0, 0, 0, 0, 1], 2, 20]
-]).
-
-precedencias([
-    canalizador-jardineiro
-]).
-
-    %preco, duracao, bonus
-obra([150, 10, 10]).
-
+:- [data].
 
 dostuff(Vars) :-
     tell('file.txt'),
@@ -61,7 +37,7 @@ dostuff(Vars) :-
     told.
 
 initTasks([], [], _).
-initTasks([[ID, _Esp, Dbase | _] | RestOps], [task(Oi, Di, Ei, Hi, ID) | RestTasks], Nworkers) :-
+initTasks([[ID, _IDobra, _Esp, Dbase | _] | RestOps], [task(Oi, Di, Ei, Hi, ID) | RestTasks], Nworkers) :-
     domain([Ei, Oi], 0, 100),
     Di in 1..Dbase,
     Hi in 1..Nworkers,
