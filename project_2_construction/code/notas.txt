@@ -37,8 +37,8 @@ Restrições:
     - Para cada tarefa T ficamos com NTrabalhadores_i
 2- Por cada tarefa, criar um vetor (TrabalhadoresTi) com tamanho igual a nº total de trabalhadores (NTrabalhadores);
 3- Definir que sum de TrabalhadoresTi é igual a NTrabalhadores_i
-4- Para todo i != j se (Oi,Ei) interseta (Oj,Ej)  então o produto escalar de TrabalhadoresTi e TrabalhadoresTj tem de ser 0.
-5- Para todo vetor TrabalhadoresTi assegurar que existe pelo menos um trabalhador cuja especialidade é a especialidade de Ti
+4- Para todo vetor TrabalhadoresTi assegurar que existe pelo menos um trabalhador cuja especialidade é a especialidade de Ti
+5- Para todo i != j se (Oi,Ei) interseta (Oj,Ej)  então o produto escalar de TrabalhadoresTi e TrabalhadoresTj tem de ser 0.
 6- Função de lucro (maximizar):
     - (+) preço contratado
     - (-) para cada tarefa, custo dos seus materiais e equipamentos
