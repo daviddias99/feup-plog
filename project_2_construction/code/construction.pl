@@ -15,10 +15,13 @@ dostuff(Vars) :-
     % Init tasks
     length(Workers, Nworkers),
     initTasks(Ops, Operations, Tasks, Nworkers),
+    
     getTaskPrecedences(Obras, Prec, Operations, [], Ps),
+    
     getPrecendenceVars(Ps,PrecedenceVars),
+    
     [TestVar] = PrecedenceVars,
-    TestVar #=< -5,
+    TestVar #=< 5,
 
     % Restriction #1
     cumulative(Tasks, [limit(Nworkers), precedences(Ps)]),
@@ -40,7 +43,6 @@ dostuff(Vars) :-
     append(FinalVars,PrecedenceVars,FinalFinalVars),
     %append(FinalVars,[Profit],FinalFinalVars),
     labeling([], FinalFinalVars),
-    write(FinalFinalVars),
     write(Tasks), write('\n'),write(Matrix),write('\n'),% write(Profit),
     told.
 
@@ -175,11 +177,18 @@ getTaskPrecedences([], _, _, Result, Result).
 getTaskPrecedences([[IDobra | _] | Obras], Prec, Ops, Acc, Result) :-
     findall(Operacao, (Operacao = [_, IDobra | _], member(Operacao, Ops)), ConstructionOps),
     getConstructionTaskPrecedences(Prec, ConstructionOps, ConstructionPrec),
+    restrictPrecedences(Ops, ConstructionPrec),
     append(Acc, ConstructionPrec, Acc1),
     getTaskPrecedences(Obras, Prec, Ops, Acc1, Result).
 
 getConstructionTaskPrecedences(Precs, Ops, ConstructionPrec) :-
-    findall(IDbefore-IDafter #= Dij, (member(Before-After, Precs), Op1 = [IDbefore, _, Before, _, _, Di | _], Op2 = [IDafter, _, After | _], member(Op1, Ops), member(Op2, Ops)), ConstructionPrec).
+    findall(IDafter-IDbefore #= Dij, (member(Before-After, Precs), Op1 = [IDbefore, _, Before | _], Op2 = [IDafter, _, After | _], member(Op1, Ops), member(Op2, Ops)), ConstructionPrec).
+
+restrictPrecedences(_, []).
+restrictPrecedences(Ops, [IDafter-IDbefore #= Dij | Prec]) :-
+    nth1(IDbefore, Ops, [_, _, _, _, _, Di |_]),
+    Dij #> Di,
+    restrictPrecedences(Ops, Prec).
 
 createSpecialtyVector(_, [], []).
 
