@@ -1,3 +1,6 @@
+:- use_module(library(clpfd)).
+:- use_module(library(lists)).
+
 operacoes([
     %[id, idObra, especialidade, tempo, custoEquipamentos]
     [1, 1, 'Carpintaria', 3, 20],
@@ -33,6 +36,6 @@ getTaskPrecedences([[IDobra | _] | Obras], Prec, Ops, Acc, Result) :-
     getTaskPrecedences(Obras, Prec, Ops, Acc1, Result).
 
 getConstructionTaskPrecedences(Precs, Ops, ConstructionPrec) :-
-    findall(IDbefore-IDafter, (member(Before-After, Precs), Op1 = [IDbefore, _, Before | _], Op2 = [IDafter, _, After | _], member(Op1, Ops), member(Op2, Ops)), ConstructionPrec).
+    findall(IDafter-IDbefore #= Dij, (member(Before-After, Precs), Op1 = [IDbefore, _, Before, _, _, Di | _], Op2 = [IDafter, _, After | _], member(Op1, Ops), member(Op2, Ops), Dij #>= Di), ConstructionPrec).
 
 

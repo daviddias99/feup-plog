@@ -9,46 +9,48 @@ dostuff(Vars) :-
     trabalhadores(Workers),
     operacoes(Ops),
     precedencias(Prec),
-    obra([Custo, Duracao, Bonus]),
+    obras(Obras),
+    especialidades(Specialties),
 
     % Init tasks
     length(Workers, Nworkers),
-    initTasks(Ops, Tasks, Nworkers),
+    initTasks(Ops, Operations, Tasks, Nworkers),
+    getTaskPrecedences(Obras, Prec, Operations, [], Ps),
 
     % Restriction #1
-    cumulative(Tasks, [limit(Nworkers)]),
+    cumulative(Tasks, [limit(Nworkers), precedences(Ps)]),
     
     % Restriction #2, #3 and #4
-    initTasksWorkersMatrix(Ops, Tasks, Matrix, Workers, Nworkers),
+    initTasksWorkersMatrix(Ops, Tasks, Matrix, Workers, Nworkers, Specialties),
 
     % Resticton #5
     transpose(Matrix,TransposedMatrix),
     imposeNoOverLaps(Tasks,TransposedMatrix),
 
-    calculateProfit(Tasks,Ops,Workers,Matrix,[Custo, Duracao, Bonus],Profit),
+    %calculateProfit(Tasks,Ops,Workers,Matrix,[Custo, Duracao, Bonus],Profit),
 
     % Solution search
     getVars(Tasks, Vars),
     flattenMatrix(Matrix,FlatMatrix,[]),
     append(Vars,FlatMatrix,FinalVars),
-    append(FinalVars,[Profit],FinalFinalVars),
-    labeling([maximize(Profit)], FinalFinalVars),
-    write(Tasks), write('\n'),write(Matrix),write('\n'), write(Profit),
+    %append(FinalVars,[Profit],FinalFinalVars),
+    labeling([], FinalVars),
+    write(Tasks), write('\n'),write(Matrix),write('\n'),% write(Profit),
     told.
 
-initTasks([], [], _).
-initTasks([[ID, _IDobra, _Esp, Dbase | _] | RestOps], [task(Oi, Di, Ei, Hi, ID) | RestTasks], Nworkers) :-
+initTasks([], [], [], _).
+initTasks([[ID, IDobra, Esp, Dbase | _] | RestInput], [[ID, IDobra, Esp, Dbase, Oi, Di, Ei, Hi] | RestOps], [task(Oi, Di, Ei, Hi, ID) | RestTasks], Nworkers) :-
     domain([Ei, Oi], 0, 100),
     Di in 1..Dbase,
     Hi in 1..Nworkers,
     Di #= Dbase / Hi,
-    initTasks(RestOps, RestTasks, Nworkers).
+    initTasks(RestInput, RestOps, RestTasks, Nworkers).
 
 getVars([], []).    
 getVars([task(Oi, Di, Ei, Hi, ID) | Tasks], [Oi, Di, Ei, Hi, ID| Vars]) :- getVars(Tasks, Vars). 
 
-initTasksWorkersMatrix([], [], [], _, _).
-initTasksWorkersMatrix([[_ID, Esp, _Dbase, _Custo] | Ops], [task(_Oi, _Di, _Ei, Hi, _ID) | Tasks], [NewRow | Matrix], Workers, Nworkers) :-
+initTasksWorkersMatrix([], [], [], _, _, _).
+initTasksWorkersMatrix([[_ID, _IDobra, Esp, _Dbase, _Custo] | Ops], [task(_Oi, _Di, _Ei, Hi, _ID) | Tasks], [NewRow | Matrix], Workers, Nworkers, Specialties) :-
     
     % Restriction #2
     length(NewRow, Nworkers),
@@ -58,14 +60,15 @@ initTasksWorkersMatrix([[_ID, Esp, _Dbase, _Custo] | Ops], [task(_Oi, _Di, _Ei, 
     sum(NewRow, #=, Hi),
 
     % Restriction #4
-    atLeastOneSpecialty(NewRow, Esp, Workers),
+    atLeastOneSpecialty(NewRow, Esp, Workers, Specialties),
 
-    initTasksWorkersMatrix(Ops, Tasks, Matrix, Workers, Nworkers).
+    initTasksWorkersMatrix(Ops, Tasks, Matrix, Workers, Nworkers, Specialties).
 
 % At least one specialty
 
-atLeastOneSpecialty(NewRow, Specialty, Workers) :-
-    specialtyList(Specialty, Workers, SpecialtyList),
+atLeastOneSpecialty(NewRow, Specialty, Workers, Specialties) :-
+    createSpecialtyVector(Specialty, Specialties, Vector),
+    specialtyList(Vector, Workers, SpecialtyList),
     scalar_product(SpecialtyList, NewRow, #>, 0).
 
 % Get specialty List of a worker
@@ -154,3 +157,23 @@ getTaskSalaryCost(Di,Workers, [0|T], TaskSalary, Acc, Index) :-
 
     NewIndex is Index + 1,
     getTaskSalaryCost(Di,Workers,T, TaskSalary,Acc,NewIndex).
+
+
+    
+getTaskPrecedences([], _, _, Result, Result).
+getTaskPrecedences([[IDobra | _] | Obras], Prec, Ops, Acc, Result) :-
+    findall(Operacao, (Operacao = [_, IDobra | _], member(Operacao, Ops)), ConstructionOps),
+    getConstructionTaskPrecedences(Prec, ConstructionOps, ConstructionPrec),
+    append(Acc, ConstructionPrec, Acc1),
+    getTaskPrecedences(Obras, Prec, Ops, Acc1, Result).
+
+getConstructionTaskPrecedences(Precs, Ops, ConstructionPrec) :-
+    findall(IDafter-IDbefore #= Dij, (member(Before-After, Precs), Op1 = [IDbefore, _, Before, _, _, Di | _], Op2 = [IDafter, _, After | _], member(Op1, Ops), member(Op2, Ops), Dij #>= Di), ConstructionPrec).
+
+createSpecialtyVector(_, [], []).
+
+createSpecialtyVector(Specialty, [Specialty | Specialties], [1|T]) :- !,
+    createSpecialtyVector(Specialty,Specialties,T).
+
+createSpecialtyVector(Specialty,[_|Specialties],[0|T]) :- !,
+    createSpecialtyVector(Specialty,Specialties,T).
