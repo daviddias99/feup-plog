@@ -22,6 +22,6 @@ precedencias([
 
 obras([
     %[id, preco, duracao, bonus]
-    [1, 300, 10, 20],
+    [1, 300, 10, 0],
     [2, 200, 15, 0]
 ]).

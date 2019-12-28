@@ -40,7 +40,7 @@ dostuff(Vars) :-
     append(Vars,FlatMatrix,FinalVars),
     append(FinalVars,PrecedenceVars,FinalFinalVars),
     append(FinalVars,[Profit],FinalFinalFinalVars),
-    labeling([maximize(Profit)], FinalFinalFinalVars),
+    labeling([maximize(Profit),ffc], FinalFinalFinalVars),
     write(Tasks), write('\n'),write(Matrix),write('\n'), write(Profit),
     told.
 
@@ -192,15 +192,10 @@ getSalariesCost([task(Oi, Di, Ei, Hi, ID)|T], Workers, [TaskWorkers|WorkersMatri
 
 getTaskSalaryCost(_,_,[],TaskSalary,TaskSalary,_).
 
-getTaskSalaryCost(Di,Workers, [1|T], TaskSalary, Acc, Index) :-
+getTaskSalaryCost(Di,Workers, [H|T], TaskSalary, Acc, Index) :-
 
     nth1(Index, Workers,[WorkerSalary, _]),
-    Acc1 #= Acc + WorkerSalary * Di,
+    Acc1 #= Acc + WorkerSalary * Di * H,
     NewIndex is Index + 1,
     getTaskSalaryCost(Di,Workers,T,TaskSalary,Acc1,NewIndex).
-
-getTaskSalaryCost(Di,Workers, [0|T], TaskSalary, Acc, Index) :-
-
-    NewIndex is Index + 1,
-    getTaskSalaryCost(Di,Workers,T, TaskSalary,Acc,NewIndex).
 
