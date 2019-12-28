@@ -42,11 +42,11 @@ dostuff(Vars) :-
     told.
 
 initTasks([], [], [], _).
-initTasks([[ID, ConstructionID, Esp, Dbase, Custo | _] | OperationsI], [[ID, ConstructionID, Esp, Dbase, Custo, Oi, Di, Ei, Hi] | RestOps], [task(Oi, Di, Ei, Hi, ID) | RestTasks], Nworkers) :-
-    domain([Ei, Oi], 0, 100),
-    Di in 1..Dbase,
+initTasks([[TaskID, ConstructionID, Specialty, BaseDuration, Cost | _] | OperationsI], [[TaskID, ConstructionID, Specialty, BaseDuration, Cost, Oi, Di, Ei, Hi] | RestOps], [task(Oi, Di, Ei, Hi, TaskID) | RestTasks], Nworkers) :-
+    domain([Ei, Oi], 0, 100), % TODO: change this
+    Di in 1..BaseDuration,
     Hi in 1..Nworkers,
-    Di #= Dbase / Hi,
+    Di #= BaseDuration / Hi,
     initTasks(OperationsI, RestOps, RestTasks, Nworkers).
 
 getVars([], []).    
