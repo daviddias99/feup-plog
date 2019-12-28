@@ -114,7 +114,7 @@ imposeNoOverlap(Index,Tasks,Row,Lines,LinesAcc,StoppingIndex) :-
     nth1(Index,Row,Element),
     nth1(Index,Tasks,task(Oi, Di, _Ei, _Hi, _ID)),
     D #= Di * Element,
-    D in 0.. 100, % TODO : CHANGE THIS LIMIT
+    D in 0.. 100, % TODO: CHANGE THIS LIMIT
     Line = line(Oi,D),
     append(LinesAcc,[Line],NewLinesAcc),
     NewIndex is Index + 1,
@@ -147,45 +147,23 @@ restrictPrecedences(Operations, [_-IDbefore #= Dij | ConstructionPrec]) :-
     Dij #> Di,
     restrictPrecedences(Operations, ConstructionPrec).
 
-% Calculate profit
+% --- Profit calculation
 
 calculateProfit(Tasks, Operations, WorkersI, WorkersMatrix, Constructions, Profit) :-
+
+    % Get the cost of the resources (this cost must be subtracted from the total)
     getResourceCost(Operations,ResourceCost,0),
-    TempProfit2 is 0 - ResourceCost,
-    getSalariesCost(Tasks,WorkersI,WorkersMatrix,SalariesCost,0,EndTimes,[]),
-    TempProfit3 #= TempProfit2 - SalariesCost,
+    TempProfit1 is 0 - ResourceCost,
+
+    % Get the cost related to worker salaries (this cost must be subtracted from the total)
+    getSalariesCost(Tasks,WorkersI,WorkersMatrix,SalariesCost,0),
+    TempProfit2 #= TempProfit1 - SalariesCost,
+
+    % Get the payment value from the constructions (including bonuses)
     getConstructionsPayment(Constructions, Operations, Payment),
-    Profit #= TempProfit3 + Payment.
+    Profit #= TempProfit2 + Payment.
 
-getConstructionsPayment([], _, 0).
-getConstructionsPayment([CurrentConstruction | Constructions], Operations, Payment) :-
-    computeConstructionPayment(CurrentConstruction, Operations, CurrentPayment),
-    getConstructionsPayment(Constructions, Operations, SubPayment),
-    Payment #= CurrentPayment + SubPayment.
-
-computeConstructionPayment([ID, Value, ExpectedDuration, BonusFee], Operations, Payment) :-
-    getConstructionStartTimes(ID, Operations, StartTimes),
-    minimum(Start, StartTimes),
-    getConstructionEndTimes(ID, Operations, EndTimes),
-    maximum(End, EndTimes),
-    domain([Duration, End, Start], 0, 100),
-    Duration #= End - Start,
-    Payment #= Value + BonusFee * (ExpectedDuration - Duration).
-
-
-getConstructionStartTimes(ConstructionID, [], []).
-getConstructionStartTimes(ConstructionID, [[_, ConstructionID, _, _, _, Start | _] | Operations], [Start | StartTimes]) :- !,    
-    getConstructionStartTimes(ConstructionID, Operations, StartTimes).
-getConstructionStartTimes(ConstructionID, [_ | Operations], StartTimes) :-
-    getConstructionStartTimes(ConstructionID, Operations, StartTimes).
-
-
-getConstructionEndTimes(ConstructionID, [], []).
-getConstructionEndTimes(ConstructionID, [[_, ConstructionID, _, _, _, _, _, End | _] | Operations], [End | EndTimes]) :- !,    
-    getConstructionEndTimes(ConstructionID, Operations, EndTimes).
-getConstructionEndTimes(ConstructionID, [_ | Operations], EndTimes) :-
-    getConstructionEndTimes(ConstructionID, Operations, EndTimes).
-
+% --- Get the cost of the resources of all tasks
 getResourceCost([],ResourceCost,ResourceCost).
 
 getResourceCost([Task|Tasks],ResourceCost,Acc) :-
@@ -194,22 +172,50 @@ getResourceCost([Task|Tasks],ResourceCost,Acc) :-
     Acc1 is Acc + Cost,
     getResourceCost(T,ResourceCost,Acc1). 
 
-getSalariesCost([],_,_,SalariesCost,SalariesCost,EndTimes,EndTimes).
-getSalariesCost([task(Oi, Di, Ei, Hi, ID)|Tasks], WorkersI, [TaskWorkers|WorkersMatrix],SalariesCost,SalaryAcc,EndTimes,EndTimesAcc) :-
-    getTaskSalaryCost(Di,WorkersI,TaskWorkers,TaskSalary,0,1),
-    SalaryAcc1 #= SalaryAcc + TaskSalary,
-    append(EndTimesAcc,[Ei],EndTimesAcc1),
-    getSalariesCost(Tasks,WorkersI,WorkersMatrix,SalariesCost,SalaryAcc1,EndTimes,EndTimesAcc1).
+% --- Get the cost associated with the workers' salary
+getSalariesCost([],_,_,SalariesCost,SalariesCost).
+getSalariesCost([task(Oi, Di, Ei, Hi, ID)|Tasks], WorkersI, [TaskWorkers|WorkersMatrix],SalariesCost,SalaryAcc) :-
+    getTaskSalaryCost(Di,WorkersI,TaskWorkers,TaskSalaryCost,0,1),
+    SalaryAcc1 #= SalaryAcc + TaskSalaryCost,
+    getSalariesCost(Tasks,WorkersI,WorkersMatrix,SalariesCost,SalaryAcc1).
 
-
-getTaskSalaryCost(_,_,[],TaskSalary,TaskSalary,_).
-
-getTaskSalaryCost(Di,WorkersI, [H|T], TaskSalary, Acc, Index) :-
+% --- Get the salary costs associated with a task
+getTaskSalaryCost(_,_,[],TaskSalaryCost,TaskSalaryCost,_).
+getTaskSalaryCost(Di,WorkersI, [H|T], TaskSalaryCost, Acc, Index) :-
 
     nth1(Index, WorkersI,[WorkerSalary, _]),
     Acc1 #= Acc + WorkerSalary * Di * H,
     NewIndex is Index + 1,
-    getTaskSalaryCost(Di,WorkersI,T,TaskSalary,Acc1,NewIndex).
+    getTaskSalaryCost(Di,WorkersI,T,TaskSalaryCost,Acc1,NewIndex).
+
+% --- Get the payment value from the constructions (including bonuses)
+getConstructionsPayment([], _, 0).
+getConstructionsPayment([CurrentConstruction | Constructions], Operations, Payment) :-
+    computeConstructionPayment(CurrentConstruction, Operations, CurrentPayment),
+    getConstructionsPayment(Constructions, Operations, SubPayment),
+    Payment #= CurrentPayment + SubPayment.
+
+% --- Get the payment value from a single construction (including bonuses)
+computeConstructionPayment([ID, Value, ExpectedDuration, BonusFee], Operations, Payment) :-
+    getConstructionStartTimes(ID, Operations, StartTimes),
+    getConstructionEndTimes(ID, Operations, EndTimes),
+    minimum(Start, StartTimes),
+    maximum(End, EndTimes),
+    domain([Duration, End, Start], 0, 100), % TODO: Change this domain
+    Duration #= End - Start,
+    Payment #= Value + BonusFee * (ExpectedDuration - Duration).
+
+getConstructionStartTimes(ConstructionID, [], []).
+getConstructionStartTimes(ConstructionID, [[_, ConstructionID, _, _, _, Start | _] | Operations], [Start | StartTimes]) :- !,    
+    getConstructionStartTimes(ConstructionID, Operations, StartTimes).
+getConstructionStartTimes(ConstructionID, [_ | Operations], StartTimes) :-
+    getConstructionStartTimes(ConstructionID, Operations, StartTimes).
+
+getConstructionEndTimes(ConstructionID, [], []).
+getConstructionEndTimes(ConstructionID, [[_, ConstructionID, _, _, _, _, _, End | _] | Operations], [End | EndTimes]) :- !,    
+    getConstructionEndTimes(ConstructionID, Operations, EndTimes).
+getConstructionEndTimes(ConstructionID, [_ | Operations], EndTimes) :-
+    getConstructionEndTimes(ConstructionID, Operations, EndTimes).
 
 %--------------------%                    
 % Auxilary Functions %
