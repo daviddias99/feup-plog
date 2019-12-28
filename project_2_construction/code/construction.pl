@@ -4,7 +4,7 @@
 :- [data].
 
 dostuff(Vars1) :-
-    tell('file.txt'),
+    tell('result_files/file.txt'),
     % Fetch variables
     trabalhadores(WorkersI),
     operacoes(OperationsI),
