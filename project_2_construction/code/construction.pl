@@ -170,11 +170,11 @@ getResourceCost([Task|Tasks],ResourceCost,Acc) :-
 
     Task = [_TaskID, _ConstructionID, _Specialty, _BaseTime, Cost | _],
     Acc1 is Acc + Cost,
-    getResourceCost(T,ResourceCost,Acc1). 
+    getResourceCost(Tasks,ResourceCost,Acc1). 
 
 % --- Get the cost associated with the workers' salary
 getSalariesCost([],_,_,SalariesCost,SalariesCost).
-getSalariesCost([task(Oi, Di, Ei, Hi, ID)|Tasks], WorkersI, [TaskWorkers|WorkersMatrix],SalariesCost,SalaryAcc) :-
+getSalariesCost([task(_Oi, Di, _Ei, _Hi, _ID)|Tasks], WorkersI, [TaskWorkers|WorkersMatrix],SalariesCost,SalaryAcc) :-
     getTaskSalaryCost(Di,WorkersI,TaskWorkers,TaskSalaryCost,0,1),
     SalaryAcc1 #= SalaryAcc + TaskSalaryCost,
     getSalariesCost(Tasks,WorkersI,WorkersMatrix,SalariesCost,SalaryAcc1).
@@ -205,13 +205,13 @@ computeConstructionPayment([ID, Value, ExpectedDuration, BonusFee], Operations, 
     Duration #= End - Start,
     Payment #= Value + BonusFee * (ExpectedDuration - Duration).
 
-getConstructionStartTimes(ConstructionID, [], []).
+getConstructionStartTimes(_, [], []).
 getConstructionStartTimes(ConstructionID, [[_, ConstructionID, _, _, _, Start | _] | Operations], [Start | StartTimes]) :- !,    
     getConstructionStartTimes(ConstructionID, Operations, StartTimes).
 getConstructionStartTimes(ConstructionID, [_ | Operations], StartTimes) :-
     getConstructionStartTimes(ConstructionID, Operations, StartTimes).
 
-getConstructionEndTimes(ConstructionID, [], []).
+getConstructionEndTimes(_, [], []).
 getConstructionEndTimes(ConstructionID, [[_, ConstructionID, _, _, _, _, _, End | _] | Operations], [End | EndTimes]) :- !,    
     getConstructionEndTimes(ConstructionID, Operations, EndTimes).
 getConstructionEndTimes(ConstructionID, [_ | Operations], EndTimes) :-
