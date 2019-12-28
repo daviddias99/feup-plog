@@ -3,7 +3,7 @@
 
 :- [data].
 
-dostuff(Vars) :-
+dostuff(Vars1) :-
     tell('file.txt'),
     % Fetch variables
     trabalhadores(WorkersI),
@@ -30,13 +30,11 @@ dostuff(Vars) :-
     calculateProfit(Tasks,Operations,WorkersI, WorkersMatrix, ConstructionsI,Profit),
 
     % Solution search
-    getVars(Tasks, Vars),
-    getPrecendenceVars(Ps,PrecedenceVars),
+    getVars(Tasks, Vars1),
     flattenMatrix(WorkersMatrix,FlatMatrix,[]),
-    append(Vars,FlatMatrix,FinalVars),
-    append(FinalVars,PrecedenceVars,FinalFinalVars),
-    append(FinalVars,[Profit],FinalFinalFinalVars),
-    labeling([maximize(Profit),ffc], FinalFinalFinalVars),
+    append(Vars1,FlatMatrix,Vars2),
+    append(Vars2,[Profit],Vars3),
+    labeling([maximize(Profit),ffc], Vars3),
     write(Tasks), write('\n'),write(WorkersMatrix),write('\n'), write(Profit),
     told.
 
@@ -114,7 +112,7 @@ imposeNoOverlap(StoppingIndex,_,_,Lines,Lines,StoppingIndex).
 imposeNoOverlap(Index,Tasks,Row,Lines,LinesAcc,StoppingIndex) :-
 
     nth1(Index,Row,Element),
-    nth1(Index,Tasks,task(Oi, Di, Ei, Hi, ID)),
+    nth1(Index,Tasks,task(Oi, Di, _Ei, _Hi, _ID)),
     D #= Di * Element,
     D in 0.. 100, % TODO : CHANGE THIS LIMIT
     Line = line(Oi,D),
@@ -140,11 +138,11 @@ getTaskPrecedences([[ConstructionID | _] | ConstructionsI], PrecedencesI, Operat
 
 % --- Get the formated residences according to task IDs
 getConstructionTaskPrecedences(Precs, Operations, ConstructionPrec) :-
-    findall(IDafter-IDbefore #= Dij, (member(Before-After, Precs), Op1 = [IDbefore, _, Before | _], Op2 = [IDafter, _, After | _], member(Op1, Operations), member(Op2, Operations)), ConstructionPrec).
+    findall(IDafter-IDbefore #= _, (member(Before-After, Precs), Op1 = [IDbefore, _, Before | _], Op2 = [IDafter, _, After | _], member(Op1, Operations), member(Op2, Operations)), ConstructionPrec).
 
 % --- Assure that the precedence values are following the right order
 restrictPrecedences(_, []).
-restrictPrecedences(Operations, [IDafter-IDbefore #= Dij | ConstructionPrec]) :-
+restrictPrecedences(Operations, [_-IDbefore #= Dij | ConstructionPrec]) :-
     nth1(IDbefore, Operations, [_, _, _, _, _, Di |_]),
     Dij #> Di,
     restrictPrecedences(Operations, ConstructionPrec).
