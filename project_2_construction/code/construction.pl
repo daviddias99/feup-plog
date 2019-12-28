@@ -58,7 +58,7 @@ getPrecendenceVars([_-_#=Var|T1],[Var|T2]) :-
     getPrecendenceVars(T1,T2). 
 
 initTasksWorkersMatrix([], [], _, _, _).
-initTasksWorkersMatrix( [[_ID,_IDobra, Esp, _Dbase,_Custo,_Oi,_Di,_Ei, Hi] | Operations], [NewRow | Matrix], WorkersI, Nworkers, SpecialtiesI) :-
+initTasksWorkersMatrix( [[_TaskID,_ConstuctionID, Specialty, _BaseDuration,_Cost,_Oi,_Di,_Ei, Hi] | Operations], [NewRow | Matrix], WorkersI, Nworkers, SpecialtiesI) :-
     
     % Restriction #2
     length(NewRow, Nworkers),
@@ -68,7 +68,7 @@ initTasksWorkersMatrix( [[_ID,_IDobra, Esp, _Dbase,_Custo,_Oi,_Di,_Ei, Hi] | Ope
     sum(NewRow, #=, Hi),
 
     % Restriction #4
-    atLeastOneSpecialty(NewRow, Esp, WorkersI, SpecialtiesI),
+    atLeastOneSpecialty(NewRow, Specialty, WorkersI, SpecialtiesI),
 
     initTasksWorkersMatrix(Operations, Matrix, WorkersI, Nworkers, SpecialtiesI).
 
@@ -187,18 +187,18 @@ getConstructionEndTimes(ConstructionID, [_ | Operations], EndTimes) :-
 
 getResourceCost([],ResourceCost,ResourceCost).
 
-getResourceCost([H|T],ResourceCost,Acc) :-
+getResourceCost([Task|Tasks],ResourceCost,Acc) :-
 
-    H = [_ID, _ConstuctionID, _Spec, _BaseTime, Cost | _],
+    Task = [_TaskID, _ConstructionID, _Specialty, _BaseTime, Cost | _],
     Acc1 is Acc + Cost,
     getResourceCost(T,ResourceCost,Acc1). 
 
 getSalariesCost([],_,_,SalariesCost,SalariesCost,EndTimes,EndTimes).
-getSalariesCost([task(Oi, Di, Ei, Hi, ID)|T], WorkersI, [TaskWorkers|WorkersMatrix],SalariesCost,SalaryAcc,EndTimes,EndTimesAcc) :-
+getSalariesCost([task(Oi, Di, Ei, Hi, ID)|Tasks], WorkersI, [TaskWorkers|WorkersMatrix],SalariesCost,SalaryAcc,EndTimes,EndTimesAcc) :-
     getTaskSalaryCost(Di,WorkersI,TaskWorkers,TaskSalary,0,1),
     SalaryAcc1 #= SalaryAcc + TaskSalary,
     append(EndTimesAcc,[Ei],EndTimesAcc1),
-    getSalariesCost(T,WorkersI,WorkersMatrix,SalariesCost,SalaryAcc1,EndTimes,EndTimesAcc1).
+    getSalariesCost(Tasks,WorkersI,WorkersMatrix,SalariesCost,SalaryAcc1,EndTimes,EndTimesAcc1).
 
 
 getTaskSalaryCost(_,_,[],TaskSalary,TaskSalary,_).
