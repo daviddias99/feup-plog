@@ -104,10 +104,10 @@ imposeNoOverLaps(Tasks,[Row|TransposedMatrix]) :-
 imposeNoOverlap(StoppingIndex,_,_,Lines,Lines,StoppingIndex).
 imposeNoOverlap(Index,Tasks,Row,Lines,LinesAcc,StoppingIndex) :-
 
-    element(Index,Row,Element),
+    nth1(Index,Row,Element),
     nth1(Index,Tasks,task(Oi, Di, Ei, Hi, ID)),
     D #= Di * Element,
-    D in 0.. 100, % TODO : CHANGE THIS LIMIT
+    D in 0.. 100, % TODO : CHANGE TsHIS LIMIT
     Line = line(Oi,D),
     append(LinesAcc,[Line],NewLinesAcc),
     NewIndex is Index + 1,
@@ -121,9 +121,6 @@ flattenMatrix([],Result,Result).
 flattenMatrix([H|T],Result,Acc) :-
     append(Acc,H,Acc1),
     flattenMatrix(T,Result,Acc1).
-
-
-
     
 getTaskPrecedences([], _, _, Result, Result).
 getTaskPrecedences([[IDobra | _] | Obras], Prec, Ops, Acc, Result) :-
