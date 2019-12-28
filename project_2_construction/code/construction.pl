@@ -13,8 +13,8 @@ dostuff(Vars) :-
     especialidades(SpecialtiesI),
 
     % Init tasks
-    length(WorkersI, NWorkers),
-    initTasks(OperationsI, Operations, Tasks, NWorkers),
+    length(WorkersI, Nworkers),
+    initTasks(OperationsI, Operations, Tasks, Nworkers),
     
     getTaskPrecedences(ConstructionsI, PrecedencesI, Operations, [], Ps),
     
@@ -22,35 +22,35 @@ dostuff(Vars) :-
     
 
     % Restriction #1
-    cumulative(Tasks, [limit(NWorkers), precedences(Ps)]),
+    cumulative(Tasks, [limit(Nworkers), precedences(Ps)]),
     print(Ps),
     
     % Restriction #2, #3 and #4
-    initTasksWorkersMatrix(Ops, Tasks, Matrix, WorkersI, NWorkers, SpecialtiesI),
+    initTasksWorkersMatrix(OperationsI, Tasks, WorkersMatrix, WorkersI, Nworkers, SpecialtiesI),
 
     % Resticton #5
-    transpose(Matrix,TransposedMatrix),
+    transpose(WorkersMatrix,TransposedMatrix),
     imposeNoOverLaps(Tasks,TransposedMatrix),
 
-    calculateProfit(Tasks,Operations,WorkersI,Matrix, ConstructionsI,Profit),
+    calculateProfit(Tasks,Operations,WorkersI,WorkersMatrix, ConstructionsI,Profit),
 
     % Solution search
     getVars(Tasks, Vars),
-    flattenMatrix(Matrix,FlatMatrix,[]),
+    flattenMatrix(WorkersMatrix,FlatMatrix,[]),
     append(Vars,FlatMatrix,FinalVars),
     append(FinalVars,PrecedenceVars,FinalFinalVars),
     append(FinalVars,[Profit],FinalFinalFinalVars),
     labeling([maximize(Profit),ffc], FinalFinalFinalVars),
-    write(Tasks), write('\n'),write(Matrix),write('\n'), write(Profit),
+    write(Tasks), write('\n'),write(WorkersMatrix),write('\n'), write(Profit),
     told.
 
 initTasks([], [], [], _).
-initTasks([[ID, ConstructionID, Esp, Dbase, Custo | _] | OperationsI], [[ID, ConstructionID, Esp, Dbase, Custo, Oi, Di, Ei, Hi] | RestOps], [task(Oi, Di, Ei, Hi, ID) | RestTasks], NWorkers) :-
+initTasks([[ID, ConstructionID, Esp, Dbase, Custo | _] | OperationsI], [[ID, ConstructionID, Esp, Dbase, Custo, Oi, Di, Ei, Hi] | RestOps], [task(Oi, Di, Ei, Hi, ID) | RestTasks], Nworkers) :-
     domain([Ei, Oi], 0, 100),
     Di in 1..Dbase,
-    Hi in 1..NWorkers,
+    Hi in 1..Nworkers,
     Di #= Dbase / Hi,
-    initTasks(OperationsI, RestOps, RestTasks, NWorkers).
+    initTasks(OperationsI, RestOps, RestTasks, Nworkers).
 
 getVars([], []).    
 getVars([task(Oi, Di, Ei, Hi, ID) | Tasks], [Oi, Di, Ei, Hi, ID| Vars]) :- getVars(Tasks, Vars). 
@@ -61,10 +61,10 @@ getPrecendenceVars([_-_#=Var|T1],[Var|T2]) :-
     getPrecendenceVars(T1,T2). 
 
 initTasksWorkersMatrix([], [], [], _, _, _).
-initTasksWorkersMatrix([[_ID, _IDobra, Esp, _Dbase, _Custo] | OperationsI], [task(_Oi, _Di, _Ei, Hi, _ID) | Tasks], [NewRow | Matrix], WorkersI, NWorkers, SpecialtiesI) :-
+initTasksWorkersMatrix([[_ID, _IDobra, Esp, _Dbase, _Custo] | OperationsI], [task(_Oi, _Di, _Ei, Hi, _ID) | Tasks], [NewRow | Matrix], WorkersI, Nworkers, SpecialtiesI) :-
     
     % Restriction #2
-    length(NewRow, NWorkers),
+    length(NewRow, Nworkers),
     domain(NewRow, 0, 1),
     
     % Restriction #3
@@ -73,7 +73,7 @@ initTasksWorkersMatrix([[_ID, _IDobra, Esp, _Dbase, _Custo] | OperationsI], [tas
     % Restriction #4
     atLeastOneSpecialty(NewRow, Esp, WorkersI, SpecialtiesI),
 
-    initTasksWorkersMatrix(OperationsI, Tasks, Matrix, WorkersI, NWorkers, SpecialtiesI).
+    initTasksWorkersMatrix(OperationsI, Tasks, Matrix, WorkersI, Nworkers, SpecialtiesI).
 
 % At least one specialty
 
