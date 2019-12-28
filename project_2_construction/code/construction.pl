@@ -166,13 +166,27 @@ getConstructionsPayment([CurrentConstruction | Constructions], Ops, Payment) :-
     Payment #= CurrentPayment + SubPayment.
 
 computeConstructionPayment([ID, Value, ExpectedDuration, BonusFee], Ops, Payment) :-
-    findall(OperationStart, member([_, ID, _, _, _, OperationStart |_], Ops), StartTimes),
+    getConstructionStartTimes(ID, Ops, StartTimes),
     minimum(Start, StartTimes),
-    findall(OperationEnd, member([_, ID, _, _, _, _, _, OperationEnd |_], Ops), EndTimes),
+    getConstructionEndTimes(ID, Ops, EndTimes),
     maximum(End, EndTimes),
     domain([Duration, End, Start], 0, 100),
     Duration #= End - Start,
     Payment #= Value + BonusFee * (ExpectedDuration - Duration).
+
+
+getConstructionStartTimes(ConstructionID, [], []).
+getConstructionStartTimes(ConstructionID, [[_, ConstructionID, _, _, _, Start | _] | Operations], [Start | StartTimes]) :- !,    
+    getConstructionStartTimes(ConstructionID, Operations, StartTimes).
+getConstructionStartTimes(ConstructionID, [_ | Operations], StartTimes) :-
+    getConstructionStartTimes(ConstructionID, Operations, StartTimes).
+
+
+getConstructionEndTimes(ConstructionID, [], []).
+getConstructionEndTimes(ConstructionID, [[_, ConstructionID, _, _, _, _, _, End | _] | Operations], [End | EndTimes]) :- !,    
+    getConstructionEndTimes(ConstructionID, Operations, EndTimes).
+getConstructionEndTimes(ConstructionID, [_ | Operations], EndTimes) :-
+    getConstructionEndTimes(ConstructionID, Operations, EndTimes).
 
 getResourceCost([],ResourceCost,ResourceCost).
 
