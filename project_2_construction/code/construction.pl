@@ -16,26 +16,23 @@ dostuff(Vars) :-
     length(WorkersI, Nworkers),
     initTasks(OperationsI, Operations, Tasks, Nworkers),
     
-    getTaskPrecedences(ConstructionsI, PrecedencesI, Operations, [], Ps),
+    getTaskPrecedences(ConstructionsI, PrecedencesI, Operations, [], CumulativePrecedences),
     
-    getPrecendenceVars(Ps,PrecedenceVars),
-    
-
     % Restriction #1
-    cumulative(Tasks, [limit(Nworkers), precedences(Ps)]),
-    print(Ps),
+    cumulative(Tasks, [limit(Nworkers), precedences(CumulativePrecedences)]),
     
     % Restriction #2, #3 and #4
     initTasksWorkersMatrix(Operations, WorkersMatrix, WorkersI, Nworkers, SpecialtiesI),
 
-    % Resticton #5
-    transpose(WorkersMatrix,TransposedMatrix),
-    imposeNoOverLaps(Tasks,TransposedMatrix),
+    % Restricton #5
+    transpose(WorkersMatrix,TransposedWorkersMatrix),
+    imposeNoOverLaps(Tasks,TransposedWorkersMatrix),
 
-    calculateProfit(Tasks,Operations,WorkersI,WorkersMatrix, ConstructionsI,Profit),
+    calculateProfit(Tasks,Operations,WorkersI, WorkersMatrix, ConstructionsI,Profit),
 
     % Solution search
     getVars(Tasks, Vars),
+    getPrecendenceVars(Ps,PrecedenceVars),
     flattenMatrix(WorkersMatrix,FlatMatrix,[]),
     append(Vars,FlatMatrix,FinalVars),
     append(FinalVars,PrecedenceVars,FinalFinalVars),
@@ -123,21 +120,21 @@ flattenMatrix([H|T],Result,Acc) :-
     flattenMatrix(T,Result,Acc1).
     
 getTaskPrecedences([], _, _, Result, Result).
-getTaskPrecedences([[ConstructionID | _] | ConstructionsI], PrecedencesI, Ops, Acc, Result) :-
-    findall(Operacao, (Operacao = [_, ConstructionID | _], member(Operacao, Ops)), ConstructionOps),
+getTaskPrecedences([[ConstructionID | _] | ConstructionsI], PrecedencesI, Operations, Acc, Result) :-
+    findall(Operacao, (Operacao = [_, ConstructionID | _], member(Operacao, Operations)), ConstructionOps),
     getConstructionTaskPrecedences(PrecedencesI, ConstructionOps, ConstructionPrec),
-    restrictPrecedences(Ops, ConstructionPrec),
+    restrictPrecedences(Operations, ConstructionPrec),
     append(Acc, ConstructionPrec, Acc1),
-    getTaskPrecedences(ConstructionsI, PrecedencesI, Ops, Acc1, Result).
+    getTaskPrecedences(ConstructionsI, PrecedencesI, Operations, Acc1, Result).
 
-getConstructionTaskPrecedences(Precs, Ops, ConstructionPrec) :-
-    findall(IDafter-IDbefore #= Dij, (member(Before-After, Precs), Op1 = [IDbefore, _, Before | _], Op2 = [IDafter, _, After | _], member(Op1, Ops), member(Op2, Ops)), ConstructionPrec).
+getConstructionTaskPrecedences(Precs, Operations, ConstructionPrec) :-
+    findall(IDafter-IDbefore #= Dij, (member(Before-After, Precs), Op1 = [IDbefore, _, Before | _], Op2 = [IDafter, _, After | _], member(Op1, Operations), member(Op2, Operations)), ConstructionPrec).
 
 restrictPrecedences(_, []).
-restrictPrecedences(Ops, [IDafter-IDbefore #= Dij | ConstructionPrec]) :-
-    nth1(IDbefore, Ops, [_, _, _, _, _, Di |_]),
+restrictPrecedences(Operations, [IDafter-IDbefore #= Dij | ConstructionPrec]) :-
+    nth1(IDbefore, Operations, [_, _, _, _, _, Di |_]),
     Dij #> Di,
-    restrictPrecedences(Ops, ConstructionPrec).
+    restrictPrecedences(Operations, ConstructionPrec).
 
 createSpecialtyVector(_, [], []).
 
@@ -151,24 +148,24 @@ createSpecialtyVector(Specialty,[_|SpecialtiesI],[0|T]) :- !,
 
 % Calculate profit
 
-calculateProfit(Tasks, Ops, WorkersI,WorkersMatrix, Constructions, Profit) :-
-    getResourceCost(Ops,ResourceCost,0),
+calculateProfit(Tasks, Operations, WorkersI, WorkersMatrix, Constructions, Profit) :-
+    getResourceCost(Operations,ResourceCost,0),
     TempProfit2 is 0 - ResourceCost,
     getSalariesCost(Tasks,WorkersI,WorkersMatrix,SalariesCost,0,EndTimes,[]),
     TempProfit3 #= TempProfit2 - SalariesCost,
-    getConstructionsPayment(Constructions, Ops, Payment),
+    getConstructionsPayment(Constructions, Operations, Payment),
     Profit #= TempProfit3 + Payment.
 
 getConstructionsPayment([], _, 0).
-getConstructionsPayment([CurrentConstruction | Constructions], Ops, Payment) :-
-    computeConstructionPayment(CurrentConstruction, Ops, CurrentPayment),
-    getConstructionsPayment(Constructions, Ops, SubPayment),
+getConstructionsPayment([CurrentConstruction | Constructions], Operations, Payment) :-
+    computeConstructionPayment(CurrentConstruction, Operations, CurrentPayment),
+    getConstructionsPayment(Constructions, Operations, SubPayment),
     Payment #= CurrentPayment + SubPayment.
 
-computeConstructionPayment([ID, Value, ExpectedDuration, BonusFee], Ops, Payment) :-
-    getConstructionStartTimes(ID, Ops, StartTimes),
+computeConstructionPayment([ID, Value, ExpectedDuration, BonusFee], Operations, Payment) :-
+    getConstructionStartTimes(ID, Operations, StartTimes),
     minimum(Start, StartTimes),
-    getConstructionEndTimes(ID, Ops, EndTimes),
+    getConstructionEndTimes(ID, Operations, EndTimes),
     maximum(End, EndTimes),
     domain([Duration, End, Start], 0, 100),
     Duration #= End - Start,
