@@ -26,7 +26,7 @@ dostuff(Vars) :-
     print(Ps),
     
     % Restriction #2, #3 and #4
-    initTasksWorkersMatrix(OperationsI, Tasks, WorkersMatrix, WorkersI, Nworkers, SpecialtiesI),
+    initTasksWorkersMatrix(Operations, WorkersMatrix, WorkersI, Nworkers, SpecialtiesI),
 
     % Resticton #5
     transpose(WorkersMatrix,TransposedMatrix),
@@ -60,8 +60,8 @@ getPrecendenceVars([],[]).
 getPrecendenceVars([_-_#=Var|T1],[Var|T2]) :-
     getPrecendenceVars(T1,T2). 
 
-initTasksWorkersMatrix([], [], [], _, _, _).
-initTasksWorkersMatrix([[_ID, _IDobra, Esp, _Dbase, _Custo] | OperationsI], [task(_Oi, _Di, _Ei, Hi, _ID) | Tasks], [NewRow | Matrix], WorkersI, Nworkers, SpecialtiesI) :-
+initTasksWorkersMatrix([], [], _, _, _).
+initTasksWorkersMatrix( [[_ID,_IDobra, Esp, _Dbase,_Custo,_Oi,_Di,_Ei, Hi] | Operations], [NewRow | Matrix], WorkersI, Nworkers, SpecialtiesI) :-
     
     % Restriction #2
     length(NewRow, Nworkers),
@@ -73,7 +73,7 @@ initTasksWorkersMatrix([[_ID, _IDobra, Esp, _Dbase, _Custo] | OperationsI], [tas
     % Restriction #4
     atLeastOneSpecialty(NewRow, Esp, WorkersI, SpecialtiesI),
 
-    initTasksWorkersMatrix(OperationsI, Tasks, Matrix, WorkersI, Nworkers, SpecialtiesI).
+    initTasksWorkersMatrix(Operations, Matrix, WorkersI, Nworkers, SpecialtiesI).
 
 % At least one specialty
 
