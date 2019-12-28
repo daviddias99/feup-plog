@@ -15,7 +15,6 @@ dostuff(Vars) :-
     % Init tasks
     length(WorkersI, Nworkers),
     initTasks(OperationsI, Operations, Tasks, Nworkers),
-    
     getTaskPrecedences(ConstructionsI, PrecedencesI, Operations, [], CumulativePrecedences),
     
     % Restriction #1
@@ -25,9 +24,9 @@ dostuff(Vars) :-
     initTasksWorkersMatrix(Operations, WorkersMatrix, WorkersI, Nworkers, SpecialtiesI),
 
     % Restricton #5
-    transpose(WorkersMatrix,TransposedWorkersMatrix),
-    imposeNoOverLaps(Tasks,TransposedWorkersMatrix),
+    imposeNoOverLaps(Tasks,WorkersMatrix),
 
+    % Optimization function
     calculateProfit(Tasks,Operations,WorkersI, WorkersMatrix, ConstructionsI,Profit),
 
     % Solution search
@@ -41,22 +40,17 @@ dostuff(Vars) :-
     write(Tasks), write('\n'),write(WorkersMatrix),write('\n'), write(Profit),
     told.
 
+% Task initialization
+
 initTasks([], [], [], _).
 initTasks([[TaskID, ConstructionID, Specialty, BaseDuration, Cost | _] | OperationsI], [[TaskID, ConstructionID, Specialty, BaseDuration, Cost, Oi, Di, Ei, Hi] | RestOps], [task(Oi, Di, Ei, Hi, TaskID) | RestTasks], Nworkers) :-
-    domain([Ei, Oi], 0, 100), % TODO: change this
+    domain([Ei, Oi], 0, 100), % TODO: domain needs improvement
     Di in 1..BaseDuration,
     Hi in 1..Nworkers,
     Di #= BaseDuration / Hi,
     initTasks(OperationsI, RestOps, RestTasks, Nworkers).
 
-getVars([], []).    
-getVars([task(Oi, Di, Ei, Hi, ID) | Tasks], [Oi, Di, Ei, Hi, ID| Vars]) :- getVars(Tasks, Vars). 
-
-getPrecendenceVars([],[]). 
-
-getPrecendenceVars([_-_#=Var|T1],[Var|T2]) :-
-    getPrecendenceVars(T1,T2). 
-
+% --- Worker Schedule initialization
 initTasksWorkersMatrix([], [], _, _, _).
 initTasksWorkersMatrix( [[_TaskID,_ConstuctionID, Specialty, _BaseDuration,_Cost,_Oi,_Di,_Ei, Hi] | Operations], [NewRow | Matrix], WorkersI, Nworkers, SpecialtiesI) :-
     
@@ -72,70 +66,25 @@ initTasksWorkersMatrix( [[_TaskID,_ConstuctionID, Specialty, _BaseDuration,_Cost
 
     initTasksWorkersMatrix(Operations, Matrix, WorkersI, Nworkers, SpecialtiesI).
 
-% At least one specialty
-
+% --- Assure that there is a worker assigned to a task that has it's speciality
 atLeastOneSpecialty(NewRow, Specialty, WorkersI, SpecialtiesI) :-
+
+    % Create a vector that has as one in the position corresponding to Specialty
     createSpecialtyVector(Specialty, SpecialtiesI, Vector),
+
+    % Create a vector that has a 1 in a position in which the worker corresponding to that position has Specialty and 0 otherwise
     specialtyList(Vector, WorkersI, SpecialtyList),
+    
+    % Ensure that there is one person with that specialty
     scalar_product(SpecialtyList, NewRow, #>, 0).
 
-% Get specialty List of a worker
-
+% --- Create a vector that has a 1 in a position in which the worker corresponding to that position has Specialty
 specialtyList(_, [], []).
 specialtyList(Specialty, [[_, WorkerSpecialties] | WorkersI], [B | List]) :-
     scalar_product_reif(WorkerSpecialties, Specialty, #>, 0, B),
     specialtyList(Specialty, WorkersI, List).
 
-% Impose no overlaps
-
-imposeNoOverLaps(_,[]).
-imposeNoOverLaps(Tasks,[Row|TransposedMatrix]) :-
-    length(Row,Length),
-    StoppingIndex is Length + 1,
-    imposeNoOverlap(1,Tasks,Row,Lines,[],StoppingIndex),
-    disjoint1(Lines),
-    imposeNoOverLaps(Tasks,TransposedMatrix).
-
-% Impose no overlap
-
-imposeNoOverlap(StoppingIndex,_,_,Lines,Lines,StoppingIndex).
-imposeNoOverlap(Index,Tasks,Row,Lines,LinesAcc,StoppingIndex) :-
-
-    nth1(Index,Row,Element),
-    nth1(Index,Tasks,task(Oi, Di, Ei, Hi, ID)),
-    D #= Di * Element,
-    D in 0.. 100, % TODO : CHANGE TsHIS LIMIT
-    Line = line(Oi,D),
-    append(LinesAcc,[Line],NewLinesAcc),
-    NewIndex is Index + 1,
-    imposeNoOverlap(NewIndex,Tasks,Row,Lines,NewLinesAcc,StoppingIndex).
-
-
-% Flatten matrix
-
-flattenMatrix([],Result,Result).
-
-flattenMatrix([H|T],Result,Acc) :-
-    append(Acc,H,Acc1),
-    flattenMatrix(T,Result,Acc1).
-    
-getTaskPrecedences([], _, _, Result, Result).
-getTaskPrecedences([[ConstructionID | _] | ConstructionsI], PrecedencesI, Operations, Acc, Result) :-
-    findall(Operacao, (Operacao = [_, ConstructionID | _], member(Operacao, Operations)), ConstructionOps),
-    getConstructionTaskPrecedences(PrecedencesI, ConstructionOps, ConstructionPrec),
-    restrictPrecedences(Operations, ConstructionPrec),
-    append(Acc, ConstructionPrec, Acc1),
-    getTaskPrecedences(ConstructionsI, PrecedencesI, Operations, Acc1, Result).
-
-getConstructionTaskPrecedences(Precs, Operations, ConstructionPrec) :-
-    findall(IDafter-IDbefore #= Dij, (member(Before-After, Precs), Op1 = [IDbefore, _, Before | _], Op2 = [IDafter, _, After | _], member(Op1, Operations), member(Op2, Operations)), ConstructionPrec).
-
-restrictPrecedences(_, []).
-restrictPrecedences(Operations, [IDafter-IDbefore #= Dij | ConstructionPrec]) :-
-    nth1(IDbefore, Operations, [_, _, _, _, _, Di |_]),
-    Dij #> Di,
-    restrictPrecedences(Operations, ConstructionPrec).
-
+% --- Create a vector that has as one in the position corresponding to Specialty
 createSpecialtyVector(_, [], []).
 
 createSpecialtyVector(Specialty, [Specialty | SpecialtiesI], [1|T]) :- !,
@@ -144,7 +93,61 @@ createSpecialtyVector(Specialty, [Specialty | SpecialtiesI], [1|T]) :- !,
 createSpecialtyVector(Specialty,[_|SpecialtiesI],[0|T]) :- !,
     createSpecialtyVector(Specialty,SpecialtiesI,T).
 
+% --- Impose that a worker can't be working in to tasks at the same time
+imposeNoOverLaps(Tasks, WorkersMatrix) :-
+    transpose(WorkersMatrix,TransposedWorkersMatrix),
+    TransposedWorkersMatrix = [SampleRow | _],
+    length(SampleRow, RowLength),
+    StoppingIndex is RowLength + 1,
+    imposeNoOverLaps_aux(Tasks,TransposedWorkersMatrix,StoppingIndex).
 
+imposeNoOverLaps_aux(_,[],_).
+imposeNoOverLaps_aux(Tasks,[Row|TransposedMatrix],StoppingIndex) :-
+
+    imposeNoOverlap(1,Tasks,Row,Lines,[],StoppingIndex),
+    disjoint1(Lines),
+    imposeNoOverLaps_aux(Tasks,TransposedMatrix,StoppingIndex).
+
+% --- Impose that a worker can't be working in to tasks at the same time
+
+imposeNoOverlap(StoppingIndex,_,_,Lines,Lines,StoppingIndex).
+imposeNoOverlap(Index,Tasks,Row,Lines,LinesAcc,StoppingIndex) :-
+
+    nth1(Index,Row,Element),
+    nth1(Index,Tasks,task(Oi, Di, Ei, Hi, ID)),
+    D #= Di * Element,
+    D in 0.. 100, % TODO : CHANGE THIS LIMIT
+    Line = line(Oi,D),
+    append(LinesAcc,[Line],NewLinesAcc),
+    NewIndex is Index + 1,
+    imposeNoOverlap(NewIndex,Tasks,Row,Lines,NewLinesAcc,StoppingIndex).
+
+% -- Get the existing task precedences in a way that is valid for the cumulative restriction    
+getTaskPrecedences([], _, _, Result, Result).
+getTaskPrecedences([[ConstructionID | _] | ConstructionsI], PrecedencesI, Operations, Acc, Result) :-
+
+    % Get all the operations of the current construction
+    findall(Operation, (Operation = [_, ConstructionID | _], member(Operation, Operations)), ConstructionOps),
+
+    % Get the formated residences according to task IDs
+    getConstructionTaskPrecedences(PrecedencesI, ConstructionOps, ConstructionPrec),
+    
+    % Assure that the precedence values are following the right order
+    restrictPrecedences(Operations, ConstructionPrec),
+
+    append(Acc, ConstructionPrec, Acc1),
+    getTaskPrecedences(ConstructionsI, PrecedencesI, Operations, Acc1, Result).
+
+% --- Get the formated residences according to task IDs
+getConstructionTaskPrecedences(Precs, Operations, ConstructionPrec) :-
+    findall(IDafter-IDbefore #= Dij, (member(Before-After, Precs), Op1 = [IDbefore, _, Before | _], Op2 = [IDafter, _, After | _], member(Op1, Operations), member(Op2, Operations)), ConstructionPrec).
+
+% --- Assure that the precedence values are following the right order
+restrictPrecedences(_, []).
+restrictPrecedences(Operations, [IDafter-IDbefore #= Dij | ConstructionPrec]) :-
+    nth1(IDbefore, Operations, [_, _, _, _, _, Di |_]),
+    Dij #> Di,
+    restrictPrecedences(Operations, ConstructionPrec).
 
 % Calculate profit
 
@@ -210,3 +213,20 @@ getTaskSalaryCost(Di,WorkersI, [H|T], TaskSalary, Acc, Index) :-
     NewIndex is Index + 1,
     getTaskSalaryCost(Di,WorkersI,T,TaskSalary,Acc1,NewIndex).
 
+%--------------------%                    
+% Auxilary Functions %
+%--------------------% 
+
+getVars([], []).    
+getVars([task(Oi, Di, Ei, Hi, ID) | Tasks], [Oi, Di, Ei, Hi, ID| Vars]) :- getVars(Tasks, Vars). 
+
+getPrecendenceVars([],[]). 
+
+getPrecendenceVars([_-_#=Var|T1],[Var|T2]) :-
+    getPrecendenceVars(T1,T2). 
+
+flattenMatrix([],Result,Result).
+
+flattenMatrix([H|T],Result,Acc) :-
+    append(Acc,H,Acc1),
+    flattenMatrix(T,Result,Acc1).
