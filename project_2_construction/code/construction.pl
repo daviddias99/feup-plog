@@ -104,18 +104,15 @@ imposeNoOverLaps(Tasks,[Row|TransposedMatrix]) :-
 imposeNoOverlap(StoppingIndex,_,_,Lines,Lines,StoppingIndex).
 imposeNoOverlap(Index,Tasks,Row,Lines,LinesAcc,StoppingIndex) :-
 
-    element(Index,Row,1),
+    element(Index,Row,Element),
     nth1(Index,Tasks,task(Oi, Di, Ei, Hi, ID)),
-    Line = line(Oi,Di),
+    D #= Di * Element,
+    D in 0.. 100, % TODO : CHANGE THIS LIMIT
+    Line = line(Oi,D),
     append(LinesAcc,[Line],NewLinesAcc),
     NewIndex is Index + 1,
     imposeNoOverlap(NewIndex,Tasks,Row,Lines,NewLinesAcc,StoppingIndex).
 
-imposeNoOverlap(Index,Tasks,Row,Lines,LinesAcc,StoppingIndex) :-
-
-    element(Index,Row,0),
-    NewIndex is Index + 1,
-    imposeNoOverlap(NewIndex,Tasks,Row,Lines,LinesAcc,StoppingIndex).
 
 % Flatten matrix
 
