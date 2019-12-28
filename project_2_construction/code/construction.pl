@@ -32,7 +32,7 @@ dostuff(Vars) :-
     transpose(Matrix,TransposedMatrix),
     imposeNoOverLaps(Tasks,TransposedMatrix),
 
-    calculateProfit(Tasks,Operations,Workers,Matrix,[Custo, Duracao, Bonus],Profit),
+    calculateProfit(Tasks,Operations,Workers,Matrix, Obras,Profit),
 
     % Solution search
     getVars(Tasks, Vars),
@@ -157,12 +157,11 @@ createSpecialtyVector(Specialty,[_|Specialties],[0|T]) :- !,
 
 % Calculate profit
 
-calculateProfit(Tasks, Ops, Workers,WorkersMatrix, [Custo, Duracao, Bonus], Profit) :-
+calculateProfit(Tasks, Ops, Workers,WorkersMatrix, Constructions, Profit) :-
     getResourceCost(Ops,ResourceCost,0),
     TempProfit2 is 0 - ResourceCost,
     getSalariesCost(Tasks,Workers,WorkersMatrix,SalariesCost,0,EndTimes,[]),
     TempProfit3 #= TempProfit2 - SalariesCost,
-    maximum(Max,EndTimes),
     getConstructionsPayment(Constructions, Ops, Payment),
     Profit #= TempProfit3 + Payment.
 
@@ -177,6 +176,7 @@ computeConstructionPayment([ID, Value, ExpectedDuration, BonusFee], Ops, Payment
     minimum(Start, StartTimes),
     findall(OperationEnd, member([_, ID, _, _, _, _, _, OperationEnd |_], Ops), EndTimes),
     maximum(End, EndTimes),
+    domain([Duration, End, Start], 0, 100),
     Duration #= End - Start,
     Payment #= Value + BonusFee * (ExpectedDuration - Duration).
 
