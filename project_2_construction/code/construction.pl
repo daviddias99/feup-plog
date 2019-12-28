@@ -9,30 +9,30 @@ dostuff(Vars) :-
     trabalhadores(WorkersI),
     operacoes(OperationsI),
     precedencias(PrecedencesI),
-    obras(Obras),
-    especialidades(Specialties),
+    obras(ConstructionsI),
+    especialidades(SpecialtiesI),
 
     % Init tasks
-    length(WorkersI, Nworkers),
-    initTasks(OperationsI, Operations, Tasks, Nworkers),
+    length(WorkersI, NWorkers),
+    initTasks(OperationsI, Operations, Tasks, NWorkers),
     
-    getTaskPrecedences(Obras, PrecedencesI, Operations, [], Ps),
+    getTaskPrecedences(ConstructionsI, PrecedencesI, Operations, [], Ps),
     
     getPrecendenceVars(Ps,PrecedenceVars),
     
 
     % Restriction #1
-    cumulative(Tasks, [limit(Nworkers), precedences(Ps)]),
+    cumulative(Tasks, [limit(NWorkers), precedences(Ps)]),
     print(Ps),
     
     % Restriction #2, #3 and #4
-    initTasksWorkersMatrix(Ops, Tasks, Matrix, WorkersI, Nworkers, Specialties),
+    initTasksWorkersMatrix(Ops, Tasks, Matrix, WorkersI, NWorkers, SpecialtiesI),
 
     % Resticton #5
     transpose(Matrix,TransposedMatrix),
     imposeNoOverLaps(Tasks,TransposedMatrix),
 
-    calculateProfit(Tasks,Operations,WorkersI,Matrix, Obras,Profit),
+    calculateProfit(Tasks,Operations,WorkersI,Matrix, ConstructionsI,Profit),
 
     % Solution search
     getVars(Tasks, Vars),
@@ -45,12 +45,12 @@ dostuff(Vars) :-
     told.
 
 initTasks([], [], [], _).
-initTasks([[ID, IDobra, Esp, Dbase, Custo | _] | OperationsI], [[ID, IDobra, Esp, Dbase, Custo, Oi, Di, Ei, Hi] | RestOps], [task(Oi, Di, Ei, Hi, ID) | RestTasks], Nworkers) :-
+initTasks([[ID, ConstructionID, Esp, Dbase, Custo | _] | OperationsI], [[ID, ConstructionID, Esp, Dbase, Custo, Oi, Di, Ei, Hi] | RestOps], [task(Oi, Di, Ei, Hi, ID) | RestTasks], NWorkers) :-
     domain([Ei, Oi], 0, 100),
     Di in 1..Dbase,
-    Hi in 1..Nworkers,
+    Hi in 1..NWorkers,
     Di #= Dbase / Hi,
-    initTasks(OperationsI, RestOps, RestTasks, Nworkers).
+    initTasks(OperationsI, RestOps, RestTasks, NWorkers).
 
 getVars([], []).    
 getVars([task(Oi, Di, Ei, Hi, ID) | Tasks], [Oi, Di, Ei, Hi, ID| Vars]) :- getVars(Tasks, Vars). 
@@ -61,24 +61,24 @@ getPrecendenceVars([_-_#=Var|T1],[Var|T2]) :-
     getPrecendenceVars(T1,T2). 
 
 initTasksWorkersMatrix([], [], [], _, _, _).
-initTasksWorkersMatrix([[_ID, _IDobra, Esp, _Dbase, _Custo] | OperationsI], [task(_Oi, _Di, _Ei, Hi, _ID) | Tasks], [NewRow | Matrix], WorkersI, Nworkers, Specialties) :-
+initTasksWorkersMatrix([[_ID, _IDobra, Esp, _Dbase, _Custo] | OperationsI], [task(_Oi, _Di, _Ei, Hi, _ID) | Tasks], [NewRow | Matrix], WorkersI, NWorkers, SpecialtiesI) :-
     
     % Restriction #2
-    length(NewRow, Nworkers),
+    length(NewRow, NWorkers),
     domain(NewRow, 0, 1),
     
     % Restriction #3
     sum(NewRow, #=, Hi),
 
     % Restriction #4
-    atLeastOneSpecialty(NewRow, Esp, WorkersI, Specialties),
+    atLeastOneSpecialty(NewRow, Esp, WorkersI, SpecialtiesI),
 
-    initTasksWorkersMatrix(OperationsI, Tasks, Matrix, WorkersI, Nworkers, Specialties).
+    initTasksWorkersMatrix(OperationsI, Tasks, Matrix, WorkersI, NWorkers, SpecialtiesI).
 
 % At least one specialty
 
-atLeastOneSpecialty(NewRow, Specialty, WorkersI, Specialties) :-
-    createSpecialtyVector(Specialty, Specialties, Vector),
+atLeastOneSpecialty(NewRow, Specialty, WorkersI, SpecialtiesI) :-
+    createSpecialtyVector(Specialty, SpecialtiesI, Vector),
     specialtyList(Vector, WorkersI, SpecialtyList),
     scalar_product(SpecialtyList, NewRow, #>, 0).
 
@@ -123,12 +123,12 @@ flattenMatrix([H|T],Result,Acc) :-
     flattenMatrix(T,Result,Acc1).
     
 getTaskPrecedences([], _, _, Result, Result).
-getTaskPrecedences([[IDobra | _] | Obras], PrecedencesI, Ops, Acc, Result) :-
-    findall(Operacao, (Operacao = [_, IDobra | _], member(Operacao, Ops)), ConstructionOps),
+getTaskPrecedences([[ConstructionID | _] | ConstructionsI], PrecedencesI, Ops, Acc, Result) :-
+    findall(Operacao, (Operacao = [_, ConstructionID | _], member(Operacao, Ops)), ConstructionOps),
     getConstructionTaskPrecedences(PrecedencesI, ConstructionOps, ConstructionPrec),
     restrictPrecedences(Ops, ConstructionPrec),
     append(Acc, ConstructionPrec, Acc1),
-    getTaskPrecedences(Obras, PrecedencesI, Ops, Acc1, Result).
+    getTaskPrecedences(ConstructionsI, PrecedencesI, Ops, Acc1, Result).
 
 getConstructionTaskPrecedences(Precs, Ops, ConstructionPrec) :-
     findall(IDafter-IDbefore #= Dij, (member(Before-After, Precs), Op1 = [IDbefore, _, Before | _], Op2 = [IDafter, _, After | _], member(Op1, Ops), member(Op2, Ops)), ConstructionPrec).
@@ -141,11 +141,11 @@ restrictPrecedences(Ops, [IDafter-IDbefore #= Dij | ConstructionPrec]) :-
 
 createSpecialtyVector(_, [], []).
 
-createSpecialtyVector(Specialty, [Specialty | Specialties], [1|T]) :- !,
-    createSpecialtyVector(Specialty,Specialties,T).
+createSpecialtyVector(Specialty, [Specialty | SpecialtiesI], [1|T]) :- !,
+    createSpecialtyVector(Specialty,SpecialtiesI,T).
 
-createSpecialtyVector(Specialty,[_|Specialties],[0|T]) :- !,
-    createSpecialtyVector(Specialty,Specialties,T).
+createSpecialtyVector(Specialty,[_|SpecialtiesI],[0|T]) :- !,
+    createSpecialtyVector(Specialty,SpecialtiesI,T).
 
 
 
