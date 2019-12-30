@@ -1,7 +1,7 @@
 :- use_module(library(clpfd)).
 :- use_module(library(lists)).
 
-:- [data].
+:- [mediumdata].
 
 dostuff(Vars1) :-
     tell('result_files/file.txt'),
@@ -11,42 +11,55 @@ dostuff(Vars1) :-
     precedencias(PrecedencesI),
     obras(ConstructionsI),
     especialidades(SpecialtiesI),
-
+    reset_timer,
     % Init tasks
     length(WorkersI, Nworkers),
-    initTasks(OperationsI, Operations, Tasks, Nworkers),
+    getTaskBaseDurations(OperationsI,Durations),
+    sumlist(Durations,TotalDuration),
+    initTasks(OperationsI, Operations, Tasks, Nworkers,TotalDuration),
     getTaskPrecedences(ConstructionsI, PrecedencesI, Operations, [], CumulativePrecedences),
     
     % Restriction #1
+
+    
     cumulative(Tasks, [limit(Nworkers), precedences(CumulativePrecedences)]),
     
     % Restriction #2, #3 and #4
     initTasksWorkersMatrix(Operations, WorkersMatrix, WorkersI, Nworkers, SpecialtiesI),
 
     % Restricton #5
-    imposeNoOverLaps(Tasks,WorkersMatrix),
+    imposeNoOverLaps(Operations,WorkersMatrix),
 
     % Optimization function
     calculateProfit(Tasks,Operations,WorkersI, WorkersMatrix, ConstructionsI,Profit),
-
+    print_time('PostingConstraints: '),
     % Solution search
     getVars(Tasks, Vars1),
     flattenMatrix(WorkersMatrix,FlatMatrix,[]),
     append(Vars1,FlatMatrix,Vars2),
     append(Vars2,[Profit],Vars3),
+    print(Vars3),
+    % labeling([maximize(Profit),time_out(12000,success),ffc], Vars3),
     labeling([maximize(Profit),ffc], Vars3),
+    print_time('LabelingTime: '),
+    fd_statistics,
+    statistics,
+
     write(Tasks), write('\n'),write(WorkersMatrix),write('\n'), write(Profit),
     told.
 
 % Task initialization
 
-initTasks([], [], [], _).
-initTasks([[TaskID, ConstructionID, Specialty, BaseDuration, Cost | _] | OperationsI], [[TaskID, ConstructionID, Specialty, BaseDuration, Cost, Oi, Di, Ei, Hi] | RestOps], [task(Oi, Di, Ei, Hi, TaskID) | RestTasks], Nworkers) :-
-    domain([Ei, Oi], 0, 100), % TODO: domain needs improvement
+initTasks([], [], [], _,_).
+initTasks([[TaskID, ConstructionID, Specialty, BaseDuration, Cost | _] | OperationsI], [[TaskID, ConstructionID, Specialty, BaseDuration, Cost, Oi, Di, Ei, Hi] | RestOps], [task(Oi, Di, Ei, Hi, TaskID) | RestTasks], Nworkers,TotalDuration) :-
+    domain([Ei, Oi], 0, TotalDuration), 
+    Ei #> Oi,
+    Ei #=< Oi + BaseDuration,
     Di in 1..BaseDuration,
     Hi in 1..Nworkers,
+    Hi #=< BaseDuration,
     Di #= BaseDuration / Hi,
-    initTasks(OperationsI, RestOps, RestTasks, Nworkers).
+    initTasks(OperationsI, RestOps, RestTasks, Nworkers,TotalDuration).
 
 % --- Worker Schedule initialization
 initTasksWorkersMatrix([], [], _, _, _).
@@ -92,33 +105,33 @@ createSpecialtyVector(Specialty,[_|SpecialtiesI],[0|T]) :- !,
     createSpecialtyVector(Specialty,SpecialtiesI,T).
 
 % --- Impose that a worker can't be working in to tasks at the same time
-imposeNoOverLaps(Tasks, WorkersMatrix) :-
+imposeNoOverLaps(Operations, WorkersMatrix) :-
     transpose(WorkersMatrix,TransposedWorkersMatrix),
     TransposedWorkersMatrix = [SampleRow | _],
     length(SampleRow, RowLength),
     StoppingIndex is RowLength + 1,
-    imposeNoOverLaps_aux(Tasks,TransposedWorkersMatrix,StoppingIndex).
+    imposeNoOverLaps_aux(Operations,TransposedWorkersMatrix,StoppingIndex).
 
 imposeNoOverLaps_aux(_,[],_).
-imposeNoOverLaps_aux(Tasks,[Row|TransposedMatrix],StoppingIndex) :-
+imposeNoOverLaps_aux(Operations,[Row|TransposedMatrix],StoppingIndex) :-
 
-    imposeNoOverlap(1,Tasks,Row,Lines,[],StoppingIndex),
+    imposeNoOverlap(1,Operations,Row,Lines,[],StoppingIndex),
     disjoint1(Lines),
-    imposeNoOverLaps_aux(Tasks,TransposedMatrix,StoppingIndex).
+    imposeNoOverLaps_aux(Operations,TransposedMatrix,StoppingIndex).
 
 % --- Impose that a worker can't be working in to tasks at the same time
 
 imposeNoOverlap(StoppingIndex,_,_,Lines,Lines,StoppingIndex).
-imposeNoOverlap(Index,Tasks,Row,Lines,LinesAcc,StoppingIndex) :-
+imposeNoOverlap(Index,Operations,Row,Lines,LinesAcc,StoppingIndex) :-
 
     nth1(Index,Row,Element),
-    nth1(Index,Tasks,task(Oi, Di, _Ei, _Hi, _ID)),
+    nth1(Index,Operations,[_TaskID,_ConstuctionID, _Specialty, BaseDuration,_Cost,Oi,Di,_Ei, _Hi]),
     D #= Di * Element,
-    D in 0.. 100, % TODO: CHANGE THIS LIMIT
+    D in 0..BaseDuration, % TODO: CHANGE THIS LIMIT
     Line = line(Oi,D),
     append(LinesAcc,[Line],NewLinesAcc),
     NewIndex is Index + 1,
-    imposeNoOverlap(NewIndex,Tasks,Row,Lines,NewLinesAcc,StoppingIndex).
+    imposeNoOverlap(NewIndex,Operations,Row,Lines,NewLinesAcc,StoppingIndex).
 
 % -- Get the existing task precedences in a way that is valid for the cumulative restriction    
 getTaskPrecedences([], _, _, Result, Result).
@@ -197,13 +210,10 @@ getConstructionsPayment([CurrentConstruction | Constructions], Operations, Payme
 
 % --- Get the payment value from a single construction (including bonuses)
 computeConstructionPayment([ID, Value, ExpectedDuration, BonusFee], Operations, Payment) :-
-    getConstructionStartTimes(ID, Operations, StartTimes),
     getConstructionEndTimes(ID, Operations, EndTimes),
-    minimum(Start, StartTimes),
     maximum(End, EndTimes),
-    domain([Duration, End, Start], 0, 100), % TODO: Change this domain
-    Duration #= End - Start,
-    Payment #= Value + BonusFee * (ExpectedDuration - Duration).
+    % domain([Duration, End, Start], 0, 100), % TODO: Change this domain
+    Payment #= Value + BonusFee * (ExpectedDuration - End).
 
 getConstructionStartTimes(_, [], []).
 getConstructionStartTimes(ConstructionID, [[_, ConstructionID, _, _, _, Start | _] | Operations], [Start | StartTimes]) :- !,    
@@ -234,3 +244,22 @@ flattenMatrix([],Result,Result).
 flattenMatrix([H|T],Result,Acc) :-
     append(Acc,H,Acc1),
     flattenMatrix(T,Result,Acc1).
+
+getTaskBaseDurations([],[]).
+
+getTaskBaseDurations([[_TaskID, _ConstructionID, _Specialty, BaseDuration, _Cost | _] | OperationsI],[BaseDuration|Times]) :-
+    getTaskBaseDurations(OperationsI,Times).
+
+reset_timer:-statistics(total_runtime, _).
+
+print_time(Msg):-statistics(total_runtime,[_,T]),TS is ((T//10)*10)/1000, nl,write(Msg), write(TS), write('s'), nl, nl.
+
+testStats(Vars):-
+    declareVars(Vars),
+    reset_timer,
+    postConstraints(Vars),
+    print_time('PostingConstraints: '),
+    labeling([], Vars),
+    print_time('LabelingTime: '),
+    fd_statistics,
+    statistics.
