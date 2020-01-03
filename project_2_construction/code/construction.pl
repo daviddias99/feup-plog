@@ -1,11 +1,36 @@
 :- use_module(library(clpfd)).
 :- use_module(library(lists)).
 
-:- [data].
+:- [bigdata].
 :- [display].
 
-dostuff(Vars1) :-
+
+varOrderFlags([min,max,occurrence,ff,ffc,max_regret]).
+valSelectionFlags([step,enum,bisect,median]).
+valOrderFlags([up,down]).
+
+
+testLabelingFlags(TimeoutSeconds) :-
+
     tell('result_files/file.txt'),
+
+    varOrderFlags(OrdFlags),
+    valSelectionFlags(SelFlags),
+    valOrderFlags(OrdValFlags),
+    findall([VarOrderFlag,ValSelFlag,ValOrderFlag],(member(VarOrderFlag,OrdFlags),member(ValSelFlag,SelFlags),member(ValOrderFlag,OrdValFlags)),LabelOptions),
+    Timeout is TimeoutSeconds * 1000,
+    repeatLabel(Timeout,LabelOptions),
+    told.
+
+repeatLabel(_,[]).
+repeatLabel(Timeout,[CurrentOptions|LabelOptions]) :-
+    print(CurrentOptions),
+    solve(_,Timeout,CurrentOptions),
+
+    repeatLabel(Timeout,LabelOptions).
+
+solve(Vars1,LabelTimeoutTime,LabelingFlags) :-
+    
     % Fetch variables
     trabalhadores(WorkersI),
     operacoes(OperationsI),
@@ -37,14 +62,15 @@ dostuff(Vars1) :-
     flattenMatrix(WorkersMatrix,FlatMatrix,[]),
     append(Vars1,FlatMatrix,Vars2),
     append(Vars2,[Profit],Vars3),
-    labeling([maximize(Profit),ffc], Vars3),
+    append(LabelingFlags,[maximize(Profit),time_out(LabelTimeoutTime,time_out)],Flags),
+    labeling(Flags, Vars3),
     print_time('LabelingTime: '),
-    fd_statistics,
-    statistics,
+    % fd_statistics,
+    % statistics,
 
     write(Tasks), write('\n'),write(WorkersMatrix),write('\n'), write(Profit),
-    nl, display_constructions(ConstructionsI, Operations, WorkersMatrix), display_workers(WorkersMatrix),
-    told.
+    nl, display_constructions(ConstructionsI, Operations, WorkersMatrix), display_workers(WorkersMatrix).
+    
 
 % Task initialization
 
@@ -254,13 +280,3 @@ getTaskBaseDurations([[_TaskID, _ConstructionID, _Specialty, BaseDuration, _Cost
 reset_timer:-statistics(total_runtime, _).
 
 print_time(Msg):-statistics(total_runtime,[_,T]),TS is ((T//10)*10)/1000, nl,write(Msg), write(TS), write('s'), nl, nl.
-
-testStats(Vars):-
-    declareVars(Vars),
-    reset_timer,
-    postConstraints(Vars),
-    print_time('PostingConstraints: '),
-    labeling([], Vars),
-    print_time('LabelingTime: '),
-    fd_statistics,
-    statistics.
