@@ -42,8 +42,12 @@ dostuff(Vars1) :-
     fd_statistics,
     statistics,
 
-    write(Tasks), write('\n'),write(WorkersMatrix),write('\n'), write(Profit),
-    nl, display_constructions(ConstructionsI, Operations, WorkersMatrix), display_workers(WorkersMatrix),
+    write(Tasks), write('\n'),write(WorkersMatrix),write('\n'), write(Profit), nl, nl, nl,
+
+    
+    display_labeling_vars([ffc]), nl,
+    display_profit(Profit), nl,
+    nl, display_constructions(ConstructionsI, Operations, WorkersMatrix), display_workers(WorkersMatrix, WorkersI),
     told.
 
 % Task initialization
