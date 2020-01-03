@@ -43,7 +43,7 @@ dostuff(Vars1) :-
     statistics,
 
     write(Tasks), write('\n'),write(WorkersMatrix),write('\n'), write(Profit),
-    nl, display_constructions(ConstructionsI, Operations),
+    nl, display_constructions(ConstructionsI, Operations, WorkersMatrix), display_workers(WorkersMatrix),
     told.
 
 % Task initialization
