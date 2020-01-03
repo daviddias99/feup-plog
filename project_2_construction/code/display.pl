@@ -26,8 +26,8 @@ display_operation_workers(ID, WorkersMatrix) :-
     display_hot_indices(WorkersOperation, 1).
 
 display_hot_indices([], _).
-display_hot_indices([1 | T], I) :- write(I), write(' '), I1 is I + 1, display_operation_workers_aux(T, I1).
-display_hot_indices([0 | T], I) :- I1 is I + 1, display_operation_workers_aux(T, I1).
+display_hot_indices([1 | T], I) :- write(I), write(' '), I1 is I + 1, display_hot_indices(T, I1).
+display_hot_indices([0 | T], I) :- I1 is I + 1, display_hot_indices(T, I1).
     
 
 
