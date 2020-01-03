@@ -1,7 +1,7 @@
 :- use_module(library(clpfd)).
 :- use_module(library(lists)).
 
-:- [mediumdata].
+:- [data].
 
 dostuff(Vars1) :-
     tell('result_files/file.txt'),
@@ -20,8 +20,6 @@ dostuff(Vars1) :-
     getTaskPrecedences(ConstructionsI, PrecedencesI, Operations, [], CumulativePrecedences),
     
     % Restriction #1
-
-    
     cumulative(Tasks, [limit(Nworkers), precedences(CumulativePrecedences)]),
     
     % Restriction #2, #3 and #4
@@ -38,8 +36,6 @@ dostuff(Vars1) :-
     flattenMatrix(WorkersMatrix,FlatMatrix,[]),
     append(Vars1,FlatMatrix,Vars2),
     append(Vars2,[Profit],Vars3),
-    print(Vars3),
-    % labeling([maximize(Profit),time_out(12000,success),ffc], Vars3),
     labeling([maximize(Profit),ffc], Vars3),
     print_time('LabelingTime: '),
     fd_statistics,
@@ -210,10 +206,13 @@ getConstructionsPayment([CurrentConstruction | Constructions], Operations, Payme
 
 % --- Get the payment value from a single construction (including bonuses)
 computeConstructionPayment([ID, Value, ExpectedDuration, BonusFee], Operations, Payment) :-
+    getConstructionStartTimes(ID, Operations, StartTimes),
     getConstructionEndTimes(ID, Operations, EndTimes),
+    minimum(Start, StartTimes),
+    Duration #= End - Start,
     maximum(End, EndTimes),
-    % domain([Duration, End, Start], 0, 100), % TODO: Change this domain
-    Payment #= Value + BonusFee * (ExpectedDuration - End).
+    Payment #= Value + BonusFee * (ExpectedDuration - Duration).
+    
 
 getConstructionStartTimes(_, [], []).
 getConstructionStartTimes(ConstructionID, [[_, ConstructionID, _, _, _, Start | _] | Operations], [Start | StartTimes]) :- !,    
