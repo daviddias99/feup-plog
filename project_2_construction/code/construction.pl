@@ -2,10 +2,7 @@
 :- use_module(library(lists)).
 
 :- [data].
-<<<<<<< HEAD
 :- [display].
-=======
->>>>>>> 455b09780272bd011263d7edd597aa106af61e06
 
 dostuff(Vars1) :-
     tell('result_files/file.txt'),
