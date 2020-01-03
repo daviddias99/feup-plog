@@ -1,7 +1,8 @@
 :- use_module(library(clpfd)).
 :- use_module(library(lists)).
 
-:- [mediumdata].
+:- [data].
+:- [display].
 
 dostuff(Vars1) :-
     tell('result_files/file.txt'),
@@ -46,6 +47,7 @@ dostuff(Vars1) :-
     statistics,
 
     write(Tasks), write('\n'),write(WorkersMatrix),write('\n'), write(Profit),
+    nl, display_constructions(ConstructionsI, Operations),
     told.
 
 % Task initialization
