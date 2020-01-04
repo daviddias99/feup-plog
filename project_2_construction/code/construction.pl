@@ -12,7 +12,7 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Solver : timeout represents the number of miliseconds to timeout
+% Solver
 solve_problem :-
     
     tell('result_files/file.txt'),
