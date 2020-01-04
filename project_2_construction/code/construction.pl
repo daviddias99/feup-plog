@@ -1,7 +1,7 @@
 :- use_module(library(clpfd)).
 :- use_module(library(lists)).
 
-:- [bigdata].
+:- [data].
 :- [display].
 
 
@@ -9,10 +9,9 @@ varOrderFlags([min,max,occurrence,ff,ffc,max_regret]).
 valSelectionFlags([step,enum,bisect,median]).
 valOrderFlags([up,down]).
 
-
 testLabelingFlags(TimeoutSeconds) :-
 
-    tell('result_files/file.txt'),
+    
 
     varOrderFlags(OrdFlags),
     valSelectionFlags(SelFlags),
@@ -23,14 +22,21 @@ testLabelingFlags(TimeoutSeconds) :-
     told.
 
 repeatLabel(_,[]).
-repeatLabel(Timeout,[CurrentOptions|LabelOptions]) :-
+repeatLabel(Timeout,[CurrentOptions|LabelOptions]) :- 
     print(CurrentOptions),
     solve(_,Timeout,CurrentOptions),
 
     repeatLabel(Timeout,LabelOptions).
 
-solve(Vars1,LabelTimeoutTime,LabelingFlags) :-
+repeatLabel(Timeout,[CurrentOptions|LabelOptions]) :-
+    write('FAILED\n'),
+    repeatLabel(Timeout,LabelOptions).
+
+
+solve(Vars1) :-
     
+    tell('result_files/file.txt'),
+
     % Fetch variables
     trabalhadores(WorkersI),
     operacoes(OperationsI),
@@ -62,18 +68,16 @@ solve(Vars1,LabelTimeoutTime,LabelingFlags) :-
     flattenMatrix(WorkersMatrix,FlatMatrix,[]),
     append(Vars1,FlatMatrix,Vars2),
     append(Vars2,[Profit],Vars3),
-    append(LabelingFlags,[maximize(Profit),time_out(LabelTimeoutTime,time_out)],Flags),
-    labeling(Flags, Vars3),
+    % append(LabelingFlags,[time_out(LabelTimeoutTime,success),maximize(Profit)],Flags),!,
+    labeling([maximize(Profit),ffc], Vars3),
     print_time('LabelingTime: '),
-    % fd_statistics,
-    % statistics,
-
+    fd_statistics,
+    statistics,
     write(Tasks), write('\n'),write(WorkersMatrix),write('\n'), write(Profit), nl, nl, nl,
-
     
-    display_labeling_vars(LabelingFlags), nl,
     display_profit(Profit), nl,
-    nl, display_constructions(ConstructionsI, Operations, WorkersMatrix), display_workers(WorkersMatrix, WorkersI).
+    nl, display_constructions(ConstructionsI, Operations, WorkersMatrix), display_workers(WorkersMatrix, WorkersI),
+    told.
 
 % Task initialization
 
