@@ -1,39 +1,19 @@
 :- use_module(library(clpfd)).
 :- use_module(library(lists)).
-
-:- [data].
 :- [display].
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% WARNING : Consult below the file that contains the input of the problem %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-varOrderFlags([min,max,occurrence,ff,ffc,max_regret]).
-valSelectionFlags([step,enum,bisect,median]).
-valOrderFlags([up,down]).
+% :- consult('input_files/data.pl').
+% :- consult('input_files/mediumdata.pl').
+:- consult('input_files/bigdata.pl').
 
-testLabelingFlags(TimeoutSeconds) :-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    
-
-    varOrderFlags(OrdFlags),
-    valSelectionFlags(SelFlags),
-    valOrderFlags(OrdValFlags),
-    findall([VarOrderFlag,ValSelFlag,ValOrderFlag],(member(VarOrderFlag,OrdFlags),member(ValSelFlag,SelFlags),member(ValOrderFlag,OrdValFlags)),LabelOptions),
-    Timeout is TimeoutSeconds * 1000,
-    repeatLabel(Timeout,LabelOptions),
-    told.
-
-repeatLabel(_,[]).
-repeatLabel(Timeout,[CurrentOptions|LabelOptions]) :- 
-    print(CurrentOptions),
-    solve(_,Timeout,CurrentOptions),
-
-    repeatLabel(Timeout,LabelOptions).
-
-repeatLabel(Timeout,[CurrentOptions|LabelOptions]) :-
-    write('FAILED\n'),
-    repeatLabel(Timeout,LabelOptions).
-
-
-solve(Vars1) :-
+% Solver : timeout represents the number of miliseconds to timeout
+solve_problem :-
     
     tell('result_files/file.txt'),
 
@@ -44,51 +24,76 @@ solve(Vars1) :-
     obras(ConstructionsI),
     especialidades(SpecialtiesI),
     reset_timer,
-    % Init tasks
+
+    % Init tasks(domain variables) and restrict the domains
     length(WorkersI, Nworkers),
     getTaskBaseDurations(OperationsI,Durations),
     sumlist(Durations,TotalDuration),
     initTasks(OperationsI, Operations, Tasks, Nworkers,TotalDuration),
     getTaskPrecedences(ConstructionsI, PrecedencesI, Operations, [], CumulativePrecedences),
-    
-    % Restriction #1
+
+    % Apply the cumulative global restriction
     cumulative(Tasks, [limit(Nworkers), precedences(CumulativePrecedences)]),
     
-    % Restriction #2, #3 and #4
+    % Initialize the worker scheduling matrix
     initTasksWorkersMatrix(Operations, WorkersMatrix, WorkersI, Nworkers, SpecialtiesI),
 
-    % Restricton #5
+    % Ensure that a worker can't be working at two operations at the same time
     imposeNoOverLaps(Operations,WorkersMatrix),
 
     % Optimization function
     calculateProfit(Tasks,Operations,WorkersI, WorkersMatrix, ConstructionsI,Profit),
+
     print_time('PostingConstraints: '),
-    % Solution search
-    getVars(Tasks, Vars1),
+
+    % Variable grouping for labeling
     flattenMatrix(WorkersMatrix,FlatMatrix,[]),
-    append(Vars1,FlatMatrix,Vars2),
-    append(Vars2,[Profit],Vars3),
-    % append(LabelingFlags,[time_out(LabelTimeoutTime,success),maximize(Profit)],Flags),!,
-    labeling([maximize(Profit),ffc], Vars3),
+    splitTaskVars(Tasks,Origins,Dur,Ends,WorkerCounts),
+    append(Dur,FlatMatrix,VarsSet1),
+    append(Origins,Ends,VarsSet2),
+    append(WorkerCounts,[Profit],VarsSet3),
+
+    % Solution searching
+    solve( [maximize(Profit),time_out(600000,_)],
+        [
+            labeling([leftmost,up],VarsSet1),
+            labeling([occurrence,enum,up],VarsSet2),
+            labeling([],VarsSet3)
+        ]
+    ),
+
+    % Solution display
     print_time('LabelingTime: '),
     fd_statistics,
     statistics,
     write(Tasks), write('\n'),write(WorkersMatrix),write('\n'), write(Profit), nl, nl, nl,
-    
     display_profit(Profit), nl,
     nl, display_constructions(ConstructionsI, Operations, WorkersMatrix), display_workers(WorkersMatrix, WorkersI),
     told.
 
-% Task initialization
+
+% Task initialization, domain variable definition.
 
 initTasks([], [], [], _,_).
 initTasks([[TaskID, ConstructionID, Specialty, BaseDuration, Cost | _] | OperationsI], [[TaskID, ConstructionID, Specialty, BaseDuration, Cost, Oi, Di, Ei, Hi] | RestOps], [task(Oi, Di, Ei, Hi, TaskID) | RestTasks], Nworkers,TotalDuration) :-
+    
+    % The start and end points of a task must be at most, aprox., the sum of the base durations of all tasks
     domain([Ei, Oi], 0, TotalDuration), 
+    
+    % The end of a task must be before it's start
     Ei #> Oi,
+
+    % The ending instant of a task must not exceed it's start instant plus it's baseduration
     Ei #=< Oi + BaseDuration,
+
+    % The value of the actual duration of a task must never exceed it's base duration nor can it be lower than one day
     Di in 1..BaseDuration,
+    
+    % At most the number of workers assigned to a task can be the total number of workers
     Hi in 1..Nworkers,
     Hi #=< BaseDuration,
+
+    % The actual duration of a task is calculated by dividing it's base time with the number of workers assigned to it
     Di #= BaseDuration / Hi,
     initTasks(OperationsI, RestOps, RestTasks, Nworkers,TotalDuration).
 
@@ -96,14 +101,14 @@ initTasks([[TaskID, ConstructionID, Specialty, BaseDuration, Cost | _] | Operati
 initTasksWorkersMatrix([], [], _, _, _).
 initTasksWorkersMatrix( [[_TaskID,_ConstuctionID, Specialty, _BaseDuration,_Cost,_Oi,_Di,_Ei, Hi] | Operations], [NewRow | Matrix], WorkersI, Nworkers, SpecialtiesI) :-
     
-    % Restriction #2
+    % The rows of the matrix represent the workers that will participate in a certain task (1 if the worker participates 0 otherwise)
     length(NewRow, Nworkers),
     domain(NewRow, 0, 1),
     
-    % Restriction #3
+    % The number of workers that participate in a task is Hi
     sum(NewRow, #=, Hi),
 
-    % Restriction #4
+    % At least one of the workers assigned must have the operations speciality
     atLeastOneSpecialty(NewRow, Specialty, WorkersI, SpecialtiesI),
 
     initTasksWorkersMatrix(Operations, Matrix, WorkersI, Nworkers, SpecialtiesI).
@@ -137,10 +142,12 @@ createSpecialtyVector(Specialty,[_|SpecialtiesI],[0|T]) :- !,
 
 % --- Impose that a worker can't be working in to tasks at the same time
 imposeNoOverLaps(Operations, WorkersMatrix) :-
+
+    % Now each row of the matrix represents the tasks in which the worker corresponding to that line will participate
     transpose(WorkersMatrix,TransposedWorkersMatrix),
     TransposedWorkersMatrix = [SampleRow | _],
     length(SampleRow, RowLength),
-    StoppingIndex is RowLength + 1,
+    StoppingIndex is RowLength + 1,% Restriction #4
     imposeNoOverLaps_aux(Operations,TransposedWorkersMatrix,StoppingIndex).
 
 imposeNoOverLaps_aux(_,[],_).
@@ -151,14 +158,13 @@ imposeNoOverLaps_aux(Operations,[Row|TransposedMatrix],StoppingIndex) :-
     imposeNoOverLaps_aux(Operations,TransposedMatrix,StoppingIndex).
 
 % --- Impose that a worker can't be working in to tasks at the same time
-
 imposeNoOverlap(StoppingIndex,_,_,Lines,Lines,StoppingIndex).
 imposeNoOverlap(Index,Operations,Row,Lines,LinesAcc,StoppingIndex) :-
 
     nth1(Index,Row,Element),
     nth1(Index,Operations,[_TaskID,_ConstuctionID, _Specialty, BaseDuration,_Cost,Oi,Di,_Ei, _Hi]),
     D #= Di * Element,
-    D in 0..BaseDuration, % TODO: CHANGE THIS LIMIT
+    D in 0..BaseDuration, 
     Line = line(Oi,D),
     append(LinesAcc,[Line],NewLinesAcc),
     NewIndex is Index + 1,
@@ -263,7 +269,12 @@ getConstructionEndTimes(ConstructionID, [_ | Operations], EndTimes) :-
 
 %--------------------%                    
 % Auxilary Functions %
-%--------------------% 
+%--------------------%
+
+
+splitTaskVars([],[],[],[],[]).
+splitTaskVars([task(Oi, Di, Ei, Hi, _) | RestTasks], [Oi|Origins],[Di|Durations],[Ei|Ends],[Hi|WorkerCounts]) :-
+    splitTaskVars(RestTasks,Origins,Durations,Ends,WorkerCounts).
 
 getVars([], []).    
 getVars([task(Oi, Di, Ei, Hi, ID) | Tasks], [Oi, Di, Ei, Hi, ID| Vars]) :- getVars(Tasks, Vars). 
@@ -287,3 +298,30 @@ getTaskBaseDurations([[_TaskID, _ConstructionID, _Specialty, BaseDuration, _Cost
 reset_timer:-statistics(total_runtime, _).
 
 print_time(Msg):-statistics(total_runtime,[_,T]),TS is ((T//10)*10)/1000, nl,write(Msg), write(TS), write('s'), nl, nl.
+
+
+% Predicates used to run the tests on the labelling flags. They don't work anymore as we changed the main solver's arguments to be simpler to test solutions.
+varOrderFlags([min,max,occurrence,ff,ffc,max_regret]).
+valSelectionFlags([step,enum,bisect,median]).
+valOrderFlags([up,down]).
+
+testLabelingFlags(TimeoutSeconds) :-
+
+    varOrderFlags(OrdFlags),
+    valSelectionFlags(SelFlags),
+    valOrderFlags(OrdValFlags),
+    findall([VarOrderFlag,ValSelFlag,ValOrderFlag],(member(VarOrderFlag,OrdFlags),member(ValSelFlag,SelFlags),member(ValOrderFlag,OrdValFlags)),LabelOptions),
+    Timeout is TimeoutSeconds * 1000,
+    repeatLabel(Timeout,LabelOptions),
+    told.
+
+repeatLabel(_,[]).
+repeatLabel(Timeout,[CurrentOptions|LabelOptions]) :- 
+    print(CurrentOptions),
+    solve(_,Timeout,CurrentOptions),
+
+    repeatLabel(Timeout,LabelOptions).
+
+repeatLabel(Timeout,[CurrentOptions|LabelOptions]) :-
+    write('FAILED\n'),
+    repeatLabel(Timeout,LabelOptions).

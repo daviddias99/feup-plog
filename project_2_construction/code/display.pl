@@ -4,7 +4,7 @@ display_operations(Operations, WorkersMatrix) :-
     display_operations_aux(Operations, WorkersMatrix).
     
 display_operations_aux([], _).
-display_operations_aux([[ID, _IDobra, Esp, Dbase, Custo, Oi, Di, Ei, Hi] | RestOps], WorkersMatrix) :-
+display_operations_aux([[ID, _IDobra, Esp, Dbase, Custo, Oi, Di, Ei, _] | RestOps], WorkersMatrix) :-
     write('\t'), write(ID), write('\t'),
     write(Esp), write('\t\t'), write(Dbase), write('\t'),
     write(Custo), write('\t'), write(Oi), write('\t\t'),
